@@ -1120,6 +1120,19 @@ function renderUserChip(){
   document.getElementById('btn-unidades').hidden = session.nivel !== 'admin';
   document.getElementById('btn-usuarios').hidden = session.nivel !== 'admin';
 }
+async function atualizarUnidadesSessao_(){
+  let todas = [];
+  try{
+    const res = await fetch(config.sheetsUrl+'?action=unidades');
+    todas = await res.json();
+  }catch(e){ return; }
+  session.unidades = session.nivel === 'admin' ? todas : todas.filter(u=>u.id===session.unidadeId);
+  if(!session.unidades.some(u=>u.id===session.unidadeId) && session.unidades.length>0){
+    session.unidadeId = session.unidades[0].id;
+  }
+  saveSession_();
+  renderUnidadeArea();
+}
 async function trocarUnidade(id){
   session.unidadeId = id;
   saveSession_();
@@ -1137,6 +1150,7 @@ async function mostrarApp(){
   document.getElementById('app-content').hidden = false;
   renderUnidadeArea();
   renderUserChip();
+  await atualizarUnidadesSessao_();
   await carregarDadosUnidadeAtual();
 }
 async function fazerLogin(){
@@ -1225,12 +1239,7 @@ async function salvarUnidade(ev){
     method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
     body: JSON.stringify({action:'saveUnidade', unidade})
   });
-  if(session.nivel==='admin'){
-    const idx = session.unidades.findIndex(u=>u.id===unidade.id);
-    if(idx>=0) session.unidades[idx] = {...session.unidades[idx], ...unidade};
-    saveSession_();
-    renderUnidadeArea();
-  }
+  await atualizarUnidadesSessao_();
   await carregarUnidadesAdmin();
   limparFormUnidade();
 }
