@@ -90,30 +90,30 @@
   .del-btn:hover{border-color:var(--rose-dim);color:var(--rose);}
   .empty{color:var(--text-faint);font-size:13px;padding:20px 4px;text-align:center;}
 
-  .day-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;}
-  .dc-header{font-family:'IBM Plex Mono';font-size:14px;font-weight:600;color:var(--text);margin-bottom:8px;}
-  .dc-grid{display:grid;grid-template-columns:1fr 420px;gap:14px;align-items:stretch;}
+  .day-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:8px;}
+  .dc-header{font-family:'IBM Plex Mono';font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;}
+  .dc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:stretch;}
 
-  .orc-card{background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:10px 16px;display:flex;flex-direction:column;justify-content:center;gap:2px;}
-  .orc-card .lbl{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;font-weight:500;}
-  .orc-card .val{font-family:'IBM Plex Mono';font-size:22px;font-weight:700;color:var(--amber);}
+  .orc-card{background:var(--surface-2);border:1px solid var(--border);border-radius:7px;padding:6px 14px;display:flex;flex-direction:column;justify-content:center;gap:1px;}
+  .orc-card .lbl{font-size:9.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;font-weight:500;}
+  .orc-card .val{font-family:'IBM Plex Mono';font-size:19px;font-weight:700;color:var(--amber);}
 
-  .tas-col{display:flex;flex-direction:column;gap:8px;}
-  .tas-cards{display:flex;gap:8px;}
-  .valid-card{flex:1.4;background:rgba(75,184,148,.12);border:1px solid var(--teal-dim);border-radius:8px;padding:8px 14px;text-align:center;display:flex;flex-direction:column;justify-content:center;}
-  .valid-card .num{font-family:'IBM Plex Mono';font-size:22px;font-weight:700;color:var(--teal);line-height:1;}
-  .valid-card .lbl{font-size:10px;color:var(--text-dim);margin-top:2px;text-transform:uppercase;letter-spacing:.04em;}
-  .total-card{flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;text-align:center;display:flex;flex-direction:column;justify-content:center;}
-  .total-card .num{font-family:'IBM Plex Mono';font-size:15px;font-weight:600;color:var(--text-dim);line-height:1;}
-  .total-card .lbl{font-size:9px;color:var(--text-faint);margin-top:2px;text-transform:uppercase;letter-spacing:.04em;}
-  .total-card .sub{font-size:9.5px;color:var(--rose);margin-top:2px;}
+  .tas-col{display:flex;flex-direction:column;gap:6px;}
+  .tas-cards{display:flex;gap:6px;}
+  .valid-card{flex:1.4;background:rgba(75,184,148,.12);border:1px solid var(--teal-dim);border-radius:7px;padding:5px 12px;text-align:center;display:flex;flex-direction:column;justify-content:center;}
+  .valid-card .num{font-family:'IBM Plex Mono';font-size:19px;font-weight:700;color:var(--teal);line-height:1;}
+  .valid-card .lbl{font-size:9px;color:var(--text-dim);margin-top:1px;text-transform:uppercase;letter-spacing:.04em;}
+  .total-card{flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:7px;padding:5px 10px;text-align:center;display:flex;flex-direction:column;justify-content:center;}
+  .total-card .num{font-family:'IBM Plex Mono';font-size:14px;font-weight:600;color:var(--text-dim);line-height:1;}
+  .total-card .lbl{font-size:8.5px;color:var(--text-faint);margin-top:1px;text-transform:uppercase;letter-spacing:.04em;}
+  .total-card .sub{font-size:9px;color:var(--rose);margin-top:1px;}
 
-  .dc-users{display:flex;flex-wrap:wrap;gap:8px;padding-top:8px;border-top:1px dashed var(--border-soft);}
-  .user-chip{background:var(--surface-2);border-radius:7px;padding:6px 12px;min-width:100px;text-align:center;}
-  .user-chip .uc-name{font-size:11.5px;font-weight:600;color:var(--text);margin-bottom:4px;white-space:nowrap;}
-  .user-chip .uc-nums{display:flex;gap:12px;justify-content:center;}
-  .uc-stat .uc-lbl{font-size:9px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;}
-  .uc-stat .uc-val{font-family:'IBM Plex Mono';font-size:14px;font-weight:600;color:var(--text);margin-top:2px;}
+  .dc-users{display:grid;gap:6px;padding-top:6px;border-top:1px dashed var(--border-soft);}
+  .user-chip{background:var(--surface-2);border-radius:7px;padding:4px 10px;text-align:center;}
+  .user-chip .uc-name{font-size:11px;font-weight:600;color:var(--text);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .user-chip .uc-nums{display:flex;gap:10px;justify-content:center;}
+  .uc-stat .uc-lbl{font-size:8.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;}
+  .uc-stat .uc-val{font-family:'IBM Plex Mono';font-size:13px;font-weight:600;color:var(--text);margin-top:1px;}
   .uc-stat.valid .uc-val{color:var(--teal);}
 
   .filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
@@ -123,6 +123,7 @@
   @media(max-width:720px){
     .dc-grid{grid-template-columns:1fr;}
     .tas-cards{flex-direction:column;}
+    .dc-users{grid-template-columns:repeat(auto-fit,minmax(90px,1fr)) !important;}
   }
 </style>
 </head>
@@ -589,7 +590,7 @@ function renderPeriodTable(elId, groups, labelFn){
                 ${s.osCount>0?`<div class="sub">${s.osCount} p/ OS</div>`:''}
               </div>
             </div>
-            <div class="dc-users">${usersHtml}</div>
+            <div class="dc-users" style="grid-template-columns:repeat(${Math.max(rows.length,1)},1fr)">${usersHtml}</div>
           </div>
         </div>
       </div>`;
