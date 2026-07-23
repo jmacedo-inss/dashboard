@@ -194,6 +194,10 @@
   .admin-form{display:grid;grid-template-columns:1fr 1fr;gap:10px;border-top:1px solid var(--border-soft);padding-top:14px;}
   .admin-form .full{grid-column:1/-1;}
   .admin-form label{display:block;margin-bottom:4px;}
+  .cor-picker-wrap{display:flex;align-items:center;gap:0.6em;}
+  .cor-picker-wrap input[type=color]{width:2.6em;height:2.6em;padding:0.2em;border-radius:0.55em;border:1px solid var(--border);background:var(--surface-2);cursor:pointer;}
+  .cor-picker-wrap span{font-size:0.82em;color:var(--text-dim);text-transform:uppercase;}
+  .unidade-cor-dot{width:0.65em;height:0.65em;border-radius:50%;flex-shrink:0;display:inline-block;margin-right:0.5em;}
 
   .unidade-chip,.unidade-select-wrap{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:0 10px;height:2.3em;font-size:12.5px;color:var(--text-dim);}
   .unidade-select-wrap select{border:none;background:none;padding:0;height:auto;font-size:12.5px;color:var(--text);}
@@ -264,6 +268,10 @@
       <form class="admin-form" onsubmit="salvarUnidade(event)">
         <input type="hidden" id="uf-id">
         <div class="full field"><label>Nome da unidade</label><input type="text" id="uf-nome" required></div>
+        <div class="full field">
+          <label>Cor de identificação</label>
+          <div class="cor-picker-wrap"><input type="color" id="uf-cor" value="#2E4B95" oninput="document.getElementById('uf-cor-hex').textContent=this.value.toUpperCase()"><span id="uf-cor-hex" class="mono">#2E4B95</span></div>
+        </div>
         <div class="field"><label>Meta orçamento (R$)</label><input type="text" inputmode="decimal" id="uf-meta-orc" class="mono" placeholder="0,00" oninput="maskCurrency(this)"></div>
         <div class="field"><label>Meta TAs válidos</label><input type="number" id="uf-meta-tas" class="mono" min="0"></div>
         <div class="field"><label>Meta por consultor</label><input type="number" id="uf-meta-consultor" class="mono" min="0"></div>
@@ -1073,15 +1081,38 @@ function loadSession_(){
 function currentUnidadeObj(){
   return session.unidades.find(u=>u.id===session.unidadeId) || session.unidades[0] || null;
 }
+function hexParaRgb_(hex){
+  if(!hex) return null;
+  const m = String(hex).replace('#','').match(/^([0-9a-f]{6})$/i);
+  if(!m) return null;
+  const n = parseInt(m[1],16);
+  return { r:(n>>16)&255, g:(n>>8)&255, b:n&255 };
+}
 function renderUnidadeArea(){
   const area = document.getElementById('unidade-area');
   const pin = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M5 21V7l8-4v18"></path><path d="M19 21V11l-6-4"></path></svg>';
   if(session.unidades.length>1){
-    area.innerHTML = `<div class="unidade-select-wrap">${pin}<select id="unidade-select" onchange="trocarUnidade(this.value)">${session.unidades.map(u=>`<option value="${u.id}" ${u.id===session.unidadeId?'selected':''}>${u.nome}</option>`).join('')}</select></div>`;
+    area.innerHTML = `<div class="unidade-select-wrap" id="unidade-select-wrap">${pin}<select id="unidade-select" onchange="trocarUnidade(this.value)">${session.unidades.map(u=>`<option value="${u.id}" ${u.id===session.unidadeId?'selected':''}>${u.nome}</option>`).join('')}</select></div>`;
+    aplicarCorSeletorUnidade_();
   } else if(session.unidades.length===1){
-    area.innerHTML = `<div class="unidade-chip">${pin}${session.unidades[0].nome}</div>`;
+    const u = session.unidades[0];
+    area.innerHTML = `<div class="unidade-chip" id="unidade-select-wrap">${pin}${u.nome}</div>`;
+    aplicarCorSeletorUnidade_();
   } else {
     area.innerHTML = `<div class="unidade-chip">Nenhuma unidade</div>`;
+  }
+}
+function aplicarCorSeletorUnidade_(){
+  const wrap = document.getElementById('unidade-select-wrap');
+  if(!wrap) return;
+  const atual = currentUnidadeObj();
+  const rgb = hexParaRgb_(atual && atual.cor);
+  if(rgb){
+    wrap.style.background = `rgba(${rgb.r},${rgb.g},${rgb.b},0.14)`;
+    wrap.style.borderColor = atual.cor;
+  } else {
+    wrap.style.background = '';
+    wrap.style.borderColor = '';
   }
 }
 function renderUserChip(){
@@ -1092,6 +1123,7 @@ function renderUserChip(){
 async function trocarUnidade(id){
   session.unidadeId = id;
   saveSession_();
+  aplicarCorSeletorUnidade_();
   await carregarDadosUnidadeAtual();
 }
 async function carregarDadosUnidadeAtual(){
@@ -1156,12 +1188,15 @@ async function carregarUnidadesAdmin(){
   const tbody = document.getElementById('unidades-tbody');
   tbody.innerHTML = unidadesTodasCache.length ? unidadesTodasCache.map(u=>`
     <tr onclick='preencherFormUnidade(${JSON.stringify(u).replace(/'/g,"&apos;")})'>
-      <td>${u.nome}</td><td>${fmtBRL(Number(u.metaOrcamento)||0)}</td><td>${u.metaTas||0}</td><td>${u.metaTasConsultor||0}</td>
+      <td>${u.cor?`<span class="unidade-cor-dot" style="background:${u.cor}"></span>`:''}${u.nome}</td><td>${fmtBRL(Number(u.metaOrcamento)||0)}</td><td>${u.metaTas||0}</td><td>${u.metaTasConsultor||0}</td>
     </tr>`).join('') : '<tr><td colspan="4" class="empty">Nenhuma unidade cadastrada.</td></tr>';
 }
 function preencherFormUnidade(u){
   document.getElementById('uf-id').value = u.id;
   document.getElementById('uf-nome').value = u.nome;
+  const cor = u.cor || '#2E4B95';
+  document.getElementById('uf-cor').value = cor;
+  document.getElementById('uf-cor-hex').textContent = cor.toUpperCase();
   document.getElementById('uf-meta-orc').value = (Number(u.metaOrcamento)||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
   document.getElementById('uf-meta-tas').value = u.metaTas || 0;
   document.getElementById('uf-meta-consultor').value = u.metaTasConsultor || 0;
@@ -1169,6 +1204,8 @@ function preencherFormUnidade(u){
 function limparFormUnidade(){
   document.getElementById('uf-id').value = '';
   document.getElementById('uf-nome').value = '';
+  document.getElementById('uf-cor').value = '#2E4B95';
+  document.getElementById('uf-cor-hex').textContent = '#2E4B95';
   document.getElementById('uf-meta-orc').value = '';
   document.getElementById('uf-meta-tas').value = '';
   document.getElementById('uf-meta-consultor').value = '';
@@ -1178,6 +1215,7 @@ async function salvarUnidade(ev){
   const unidade = {
     id: document.getElementById('uf-id').value || undefined,
     nome: document.getElementById('uf-nome').value.trim(),
+    cor: document.getElementById('uf-cor').value,
     metaOrcamento: parseCurrencyInput(document.getElementById('uf-meta-orc').value),
     metaTas: parseInt(document.getElementById('uf-meta-tas').value,10) || 0,
     metaTasConsultor: parseInt(document.getElementById('uf-meta-consultor').value,10) || 0
