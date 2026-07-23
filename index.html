@@ -591,16 +591,30 @@ async function confirmImport(){
   const parsed = [];
   let skipped = 0;
   showImportProgress();
-  setImportProgress(15, 'Lendo linhas da planilha...');
-  pendingImport.dataRows.forEach(row=>{
+  setImportProgress(2, 'Iniciando importação...');
+  await new Promise(r=>setTimeout(r,0));
+
+  const total = pendingImport.dataRows.length;
+  const chunk = Math.max(1, Math.ceil(total/60));
+  for(let i=0;i<total;i++){
+    const row = pendingImport.dataRows[i];
     const dataIso = parseDateCell_(row[dIdx]);
     const usuario = String(row[uIdx]||'').trim();
-    if(!dataIso || !usuario){ skipped++; return; }
-    const subtipo = classifySubtipo(row, tIdxRaw, keyword);
-    parsed.push({data:dataIso, usuario, subtipo});
-  });
+    if(!dataIso || !usuario){
+      skipped++;
+    } else {
+      const subtipo = classifySubtipo(row, tIdxRaw, keyword);
+      parsed.push({data:dataIso, usuario, subtipo});
+    }
+    if(i % chunk === 0 || i === total-1){
+      const pct = 2 + Math.round(((i+1)/total)*58);
+      setImportProgress(pct, 'Lendo linha '+(i+1)+' de '+total+'...');
+      await new Promise(r=>setTimeout(r,0));
+    }
+  }
   if(parsed.length===0){ hideImportProgress(); alert('Nenhuma linha com data e usuário válidos para importar. Confira se escolheu as colunas certas — '+skipped+' linha(s) foram ignoradas.'); return; }
-  setImportProgress(40, 'Organizando por data e usuário...');
+  setImportProgress(65, 'Organizando por data e usuário...');
+  await new Promise(r=>setTimeout(r,0));
 
   const datesInFile = [...new Set(parsed.map(p=>p.data))].sort();
   const existingDates = datesInFile.filter(d => records.some(r=>r.data===d && r.tipo==='ticket'));
@@ -609,7 +623,8 @@ async function confirmImport(){
     const replace = confirm('Já existem TAs lançados para: '+list+'. OK para substituir esses dias, Cancelar para somar aos já existentes.');
     if(replace) records = records.filter(r=>!(r.tipo==='ticket' && existingDates.includes(r.data)));
   }
-  setImportProgress(60, 'Preparando lançamentos...');
+  setImportProgress(78, 'Preparando lançamentos...');
+  await new Promise(r=>setTimeout(r,0));
 
   parsed.forEach(p=>{
     records.push({id:uid(), data:p.data, tipo:'ticket', subtipo:p.subtipo, usuario:p.usuario, valor:0});
@@ -618,7 +633,7 @@ async function confirmImport(){
   document.getElementById('upload-preview').style.display = 'none';
   selectedDate = datesInFile[datesInFile.length-1];
   document.getElementById('f-data').value = selectedDate;
-  setImportProgress(80, 'Salvando e sincronizando com Google Sheets...');
+  setImportProgress(88, 'Salvando e sincronizando com Google Sheets...');
   await persistAndSync();
   renderAll();
   setImportProgress(100, 'Concluído!');
