@@ -39,29 +39,34 @@
   details.cfg-panel[open] summary:before{content:"▾ ";}
   details.cfg-panel .cfg-inner{padding:0 16px 16px;}
 
-  .goal-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;margin-bottom:16px;}
-  .goal-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow);}
+  .goal-cards{display:grid;grid-template-columns:1fr 1.6fr 0.9fr;gap:14px;margin-bottom:16px;}
+  .goal-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow);display:flex;flex-direction:column;}
   .goal-card .gc-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;}
   .goal-card .gc-title{font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;font-weight:600;}
   .goal-card .gc-value{font-family:'IBM Plex Mono';font-size:24px;font-weight:700;color:var(--text);margin-top:2px;}
   .goal-card .gc-pct{font-family:'IBM Plex Mono';font-size:13px;color:var(--text-dim);font-weight:600;}
   .goal-track{position:relative;width:100%;height:8px;background:var(--surface-3);border-radius:5px;overflow:hidden;margin:12px 0 14px;}
+  .goal-track.small{height:5px;margin:4px 0 0;}
   .goal-fill{height:100%;border-radius:5px;transition:width .5s ease;}
   .goal-fill.orc{background:linear-gradient(90deg, var(--amber), #E0932A);}
   .goal-fill.valid{background:linear-gradient(90deg, var(--teal), #17C79A);}
-  .goal-minis{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-  .goal-mini{background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;text-align:center;}
+  .goal-minis{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1;}
+  .goal-mini{background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;text-align:center;display:flex;flex-direction:column;justify-content:center;}
   .goal-mini .lbl{font-size:9.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;}
   .goal-mini .val{font-family:'IBM Plex Mono';font-size:16px;font-weight:700;color:var(--text);margin-top:2px;}
   .goal-mini .note{font-size:8.5px;color:var(--text-faint);margin-top:1px;}
 
-  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:28px;}
-  .stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow);}
-  .stat .lbl{font-size:11.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;}
-  .stat .val{font-family:'IBM Plex Mono';font-size:22px;font-weight:600;margin-top:4px;}
-  .stat.amber .val{color:var(--amber);}
-  .stat.teal .val{color:var(--teal);}
-  .stat.rose .val{color:var(--rose);}
+  .goal-extra{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px;}
+  .goal-extra-item{background:var(--surface-3);border:1px solid var(--border);border-radius:6px;padding:5px 6px;text-align:center;}
+  .goal-extra-item .lbl{font-size:7.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.03em;line-height:1.2;}
+  .goal-extra-item .val{font-family:'IBM Plex Mono';font-size:12.5px;font-weight:600;color:var(--text);margin-top:2px;}
+
+  .rank-card .rank-sub{font-size:9.5px;color:var(--text-faint);font-weight:400;text-transform:none;letter-spacing:0;}
+  .rank-list{display:flex;flex-direction:column;gap:7px;margin-top:10px;}
+  .rank-row .rank-top{display:flex;justify-content:space-between;align-items:baseline;font-size:11.5px;gap:8px;}
+  .rank-row .rank-name{color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .rank-row .rank-val{font-family:'IBM Plex Mono';color:var(--text-dim);font-size:11px;flex-shrink:0;}
+  .rank-empty{font-size:11.5px;color:var(--text-faint);margin-top:8px;}
 
   nav.tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:24px;flex-wrap:wrap;}
   nav.tabs button{background:none;border:none;color:var(--text-dim);font-family:'Manrope';font-size:13.5px;font-weight:500;padding:10px 14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;}
@@ -147,6 +152,8 @@
 
   ::placeholder{color:var(--text-faint);}
   @media(max-width:720px){
+    .goal-cards{grid-template-columns:1fr;}
+    .tas-grid{grid-template-columns:1fr;}
     .dc-grid{grid-template-columns:1fr;}
     .tas-cards{flex-direction:column;}
     .dc-users{grid-template-columns:repeat(auto-fit,minmax(90px,1fr)) !important;}
@@ -184,7 +191,6 @@
   </details>
 
   <div class="goal-cards" id="goal-cards"></div>
-  <div class="stats" id="stats"></div>
 
   <nav class="tabs">
     <button data-view="lancar" class="active">Lançar</button>
@@ -644,9 +650,23 @@ function renderGoalCards(){
   const monthRecs = records.filter(r=>monthKey(normalizeDateStr_(r.data))===info.mk);
   const s = daySummary(monthRecs);
   const mesLabel = monthLabel(info.mk);
+  const allTime = daySummary(records);
+  const diasRegistrados = Object.keys(groupBy(records,r=>r.data)).length;
 
   const orc = monthProgress(s.orcTotal, GOALS.orcamento, info.daysElapsed, info.daysInMonth);
   const val = monthProgress(s.taCount, GOALS.validos, info.daysElapsed, info.daysInMonth);
+
+  const ranking = Object.entries(s.byUser)
+    .map(([name,d])=>({name, valid:d.ta}))
+    .sort((a,b)=> b.valid-a.valid || a.name.localeCompare(b.name,'pt-BR'));
+  const rankingHtml = ranking.length>0 ? ranking.map(u=>{
+    const pct = Math.min(u.valid/GOALS.validosPorConsultor*100, 100);
+    return `
+    <div class="rank-row">
+      <div class="rank-top"><span class="rank-name">${displayName(u.name)}</span><span class="rank-val">${u.valid}/${GOALS.validosPorConsultor}</span></div>
+      <div class="goal-track small"><div class="goal-fill valid" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('') : '<div class="rank-empty">Sem TAs no mês</div>';
 
   document.getElementById('goal-cards').innerHTML = `
     <div class="goal-card">
@@ -657,7 +677,7 @@ function renderGoalCards(){
       <div class="goal-track"><div class="goal-fill orc" style="width:${Math.min(orc.pct,100)}%"></div></div>
       <div class="goal-minis">
         <div class="goal-mini"><div class="lbl">Meta</div><div class="val">${fmtBRL(GOALS.orcamento)}</div></div>
-        <div class="goal-mini"><div class="lbl">Projeção fim do mês</div><div class="val">${fmtBRL(orc.projection)}</div></div>
+        <div class="goal-mini"><div class="lbl">Projeção</div><div class="val">${fmtBRL(orc.projection)}</div></div>
       </div>
     </div>
     <div class="goal-card">
@@ -668,17 +688,18 @@ function renderGoalCards(){
       <div class="goal-track"><div class="goal-fill valid" style="width:${Math.min(val.pct,100)}%"></div></div>
       <div class="goal-minis">
         <div class="goal-mini"><div class="lbl">Meta</div><div class="val">${GOALS.validos}</div><div class="note">${GOALS.validosPorConsultor} / consultor</div></div>
-        <div class="goal-mini"><div class="lbl">Projeção fim do mês</div><div class="val">${Math.round(val.projection)}</div></div>
+        <div class="goal-mini"><div class="lbl">Projeção</div><div class="val">${Math.round(val.projection)}</div></div>
+      </div>
+      <div class="goal-extra">
+        <div class="goal-extra-item"><div class="lbl">TAs totais (histórico)</div><div class="val">${allTime.ticketsTotal}</div></div>
+        <div class="goal-extra-item"><div class="lbl">Transf. p/ OS (histórico)</div><div class="val">${allTime.osCount}</div></div>
+        <div class="goal-extra-item"><div class="lbl">Dias registrados</div><div class="val">${diasRegistrados}</div></div>
       </div>
     </div>
-  `;
-}
-function renderStats(){
-  const s = daySummary(records);
-  document.getElementById('stats').innerHTML = `
-    <div class="stat"><div class="lbl">TAs totais (histórico)</div><div class="val">${s.ticketsTotal}</div></div>
-    <div class="stat rose"><div class="lbl">Transferidos p/ OS (histórico)</div><div class="val">${s.osCount}</div></div>
-    <div class="stat"><div class="lbl">Dias registrados</div><div class="val">${Object.keys(groupBy(records,r=>r.data)).length}</div></div>
+    <div class="goal-card rank-card">
+      <div class="gc-title">Ranking de TAs válidos — ${mesLabel} <span class="rank-sub">(meta ${GOALS.validosPorConsultor}/consultor)</span></div>
+      <div class="rank-list">${rankingHtml}</div>
+    </div>
   `;
 }
 function renderLancar(){
@@ -760,7 +781,7 @@ function renderHistorico(){
       <td style="text-align:right"><button class="del-btn" onclick="deleteEntry('${r.id}')">×</button></td>
     </tr>`).join('');
 }
-function renderAll(){ renderGoalCards(); renderStats(); renderLancar(); renderDiario(); renderSemanal(); renderMensal(); renderHistorico(); }
+function renderAll(){ renderGoalCards(); renderLancar(); renderDiario(); renderSemanal(); renderMensal(); renderHistorico(); }
 
 function exportExcel(){
   const wb = XLSX.utils.book_new();
