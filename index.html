@@ -68,8 +68,6 @@
   button.ghost{background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:6px;height:36px;padding:0 14px;font-family:'Inter';font-weight:500;font-size:13.5px;cursor:pointer;}
   button.ghost:hover{border-color:var(--amber-dim);color:var(--amber);}
 
-  #date-select-row{display:flex;gap:14px;align-items:flex-end;margin-bottom:20px;}
-
   #orc-form{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;}
 
   .upload-box{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px;border:1px dashed var(--border);border-radius:8px;background:var(--surface-2);}
@@ -78,7 +76,6 @@
 
   #upload-preview{margin-top:16px;border-top:1px solid var(--border-soft);padding-top:16px;}
   .map-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px;}
-  #manual-ta-form{display:flex;gap:10px;align-items:flex-end;margin-top:14px;flex-wrap:wrap;}
 
   table{width:100%;border-collapse:collapse;font-size:13.5px;}
   th{text-align:left;color:var(--text-faint);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.04em;padding:8px 10px;border-bottom:1px solid var(--border);}
@@ -152,7 +149,6 @@
 
   <nav class="tabs">
     <button data-view="lancar" class="active">Lançar</button>
-    <button data-view="diario">Diário</button>
     <button data-view="semanal">Semanal</button>
     <button data-view="mensal">Mensal</button>
     <button data-view="historico">Histórico completo</button>
@@ -160,16 +156,13 @@
 
   <section class="view active" id="view-lancar">
 
-    <div id="date-select-row">
-      <div class="field">
-        <label>Data de referência <span style="text-transform:none;color:var(--text-faint);">(usada só no orçamento e nos TAs manuais)</span></label>
-        <input type="date" id="f-data" class="mono">
-      </div>
-    </div>
-
     <div class="panel">
-      <h2>Orçamento do dia <span id="orc-atual"></span></h2>
+      <h2>Orçamento <span id="orc-atual"></span></h2>
       <div id="orc-form">
+        <div class="field">
+          <label>Data</label>
+          <input type="date" id="f-data" class="mono">
+        </div>
         <div class="field">
           <label>Valor total (R$)</label>
           <input type="number" id="f-orc-valor" class="mono" step="0.01" min="0" placeholder="0,00">
@@ -180,31 +173,14 @@
 
     <div class="panel">
       <div class="head-row">
-        <h2>TAs do dia</h2>
+        <h2>Importar TAs</h2>
       </div>
 
       <div class="upload-box">
-        <label for="f-upload" style="margin:0;text-transform:none;font-size:13px;color:var(--text);cursor:pointer;">⇧ Importar planilha (.xlsx / .csv)</label>
+        <label for="f-upload" style="margin:0;text-transform:none;font-size:13px;color:var(--text);cursor:pointer;">⇧ Importar planilha (.xlsx / .csv / .xls)</label>
         <input type="file" id="f-upload" accept=".xlsx,.xls,.csv" onchange="handleUpload(event)">
-        <span>a data de cada TA vem da própria planilha (CREATE_DATE) — pode importar vários dias de uma vez</span>
-        <button class="ghost" onclick="document.getElementById('manual-ta-form').classList.toggle('show')">+ adicionar manualmente</button>
+        <span>a data de cada TA vem da própria planilha (coluna CREATE_DATE) — pode importar vários dias de uma vez, não precisa escolher data aqui</span>
       </div>
-
-      <form id="manual-ta-form" style="display:none" onsubmit="addManualTicket(event)">
-        <div class="field">
-          <label>Usuário</label>
-          <input type="text" id="f-usuario" list="lista-usuarios" placeholder="Nome do atendente" required>
-          <datalist id="lista-usuarios"></datalist>
-        </div>
-        <div class="field">
-          <label>Tipo</label>
-          <select id="f-subtipo">
-            <option value="TA">Válido</option>
-            <option value="OS">Transferido p/ OS</option>
-          </select>
-        </div>
-        <button type="submit" class="primary">+ Adicionar</button>
-      </form>
 
       <div id="upload-preview" style="display:none">
         <p class="hint">Planilha lida: <span id="preview-count"></span> linha(s). <span id="auto-detect-msg"></span></p>
@@ -235,16 +211,12 @@
           <button class="ghost" onclick="cancelImport()">Cancelar</button>
         </div>
       </div>
-
-      <table style="margin-top:18px;">
-        <thead><tr><th>Usuário</th><th>Tipo</th><th></th></tr></thead>
-        <tbody id="today-body"></tbody>
-      </table>
     </div>
-  </section>
 
-  <section class="view" id="view-diario">
-    <div class="panel"><h2>Resumo por dia</h2><div id="diario-body"></div></div>
+    <div class="panel">
+      <h2>Resumo por dia</h2>
+      <div id="diario-body"></div>
+    </div>
   </section>
 
   <section class="view" id="view-semanal">
@@ -276,8 +248,6 @@
   </section>
 
 </div>
-
-<style>#manual-ta-form.show{display:flex !important;}</style>
 
 <script>
 let records = [];
@@ -372,16 +342,6 @@ async function saveOrcamento(){
   await persistAndSync();
   renderAll();
 }
-async function addManualTicket(ev){
-  ev.preventDefault();
-  const usuario = document.getElementById('f-usuario').value.trim();
-  const subtipo = document.getElementById('f-subtipo').value;
-  if(!usuario) return;
-  records.push({id:uid(), data:selectedDate, tipo:'ticket', subtipo, usuario, valor:0});
-  await persistAndSync();
-  document.getElementById('f-usuario').value = '';
-  renderAll();
-}
 async function deleteEntry(id){
   records = records.filter(r => r.id !== id);
   await persistAndSync();
@@ -407,8 +367,9 @@ function handleUpload(ev){
       const userSel = document.getElementById('map-usuario');
       const tipoSel = document.getElementById('map-tipo');
       const opts = headers.map((h,i)=>`<option value="${i}">${h||('Coluna '+(i+1))}</option>`).join('');
-      dataSel.innerHTML = opts;
-      userSel.innerHTML = opts;
+      const placeholder = '<option value="" selected>-- selecione a coluna --</option>';
+      dataSel.innerHTML = placeholder+opts;
+      userSel.innerHTML = placeholder+opts;
       tipoSel.innerHTML = '<option value="">(nenhuma — todos válidos)</option>'+opts;
 
       const autoDateIdx = findColumn_(headers, 'create_date') >=0 ? findColumn_(headers, 'create_date') : findColumn_(headers, 'create date');
@@ -417,11 +378,16 @@ function handleUpload(ev){
       if(autoDateIdx>=0) dataSel.value = String(autoDateIdx);
       if(autoUserIdx>=0) userSel.value = String(autoUserIdx);
       if(autoResultIdx>=0) tipoSel.value = String(autoResultIdx);
-      const msgs = [];
-      msgs.push(autoDateIdx>=0 ? 'data detectada em "'+headers[autoDateIdx]+'"' : 'não encontrei CREATE_DATE — selecione manualmente');
-      msgs.push(autoUserIdx>=0 ? 'usuário detectado em "'+headers[autoUserIdx]+'"' : 'não encontrei User ID — selecione manualmente');
-      msgs.push(autoResultIdx>=0 ? 'resultado detectado em "'+headers[autoResultIdx]+'"' : 'não encontrei CONSULTATION RESULT — selecione manualmente');
-      document.getElementById('auto-detect-msg').textContent = msgs.join(', ')+'.';
+
+      const msgEl = document.getElementById('auto-detect-msg');
+      const problems = [];
+      if(autoDateIdx<0) problems.push('a coluna de data (CREATE_DATE)');
+      if(autoUserIdx<0) problems.push('a coluna do usuário (User ID)');
+      if(problems.length>0){
+        msgEl.innerHTML = '<b style="color:var(--rose)">Não consegui identificar sozinho '+problems.join(' e ')+'. Selecione manualmente abaixo antes de confirmar.</b><br>Cabeçalhos encontrados na planilha: '+headers.map(h=>h||'(vazio)').join(', ');
+      } else {
+        msgEl.textContent = 'Detectado automaticamente: data em "'+headers[autoDateIdx]+'", usuário em "'+headers[autoUserIdx]+'"'+(autoResultIdx>=0?', resultado em "'+headers[autoResultIdx]+'"':', resultado não identificado — selecione manualmente se quiser separar válidos de OS')+'.';
+      }
 
       document.getElementById('upload-preview').style.display = 'block';
       renderImportPreviewTable();
@@ -433,10 +399,11 @@ function handleUpload(ev){
   ev.target.value = '';
 }
 function findColumn_(headers, needle){
-  const n = needle.toLowerCase();
-  let idx = headers.findIndex(h=>h.toLowerCase().trim()===n);
+  const norm = s => s.toLowerCase().replace(/[\s_]+/g,' ').trim();
+  const n = norm(needle);
+  let idx = headers.findIndex(h=>norm(h)===n);
   if(idx>=0) return idx;
-  return headers.findIndex(h=>h.toLowerCase().includes(n));
+  return headers.findIndex(h=>norm(h).includes(n));
 }
 function classifySubtipo(row, tIdx, keyword){
   if(tIdx===null || tIdx==='') return 'TA';
@@ -458,11 +425,16 @@ function parseDateCell_(val){
 }
 function renderImportPreviewTable(){
   if(!pendingImport) return;
-  const dIdx = parseInt(document.getElementById('map-data').value,10);
-  const uIdx = parseInt(document.getElementById('map-usuario').value,10);
+  const dRaw = document.getElementById('map-data').value;
+  const uRaw = document.getElementById('map-usuario').value;
   const tIdxRaw = document.getElementById('map-tipo').value;
   const keyword = document.getElementById('map-os-keyword').value;
   const body = document.getElementById('preview-body');
+  if(dRaw===''||uRaw===''){
+    body.innerHTML = '<tr><td colspan="3" class="empty">Selecione a coluna de data e a coluna de usuário acima para ver a prévia.</td></tr>';
+    return;
+  }
+  const dIdx = parseInt(dRaw,10), uIdx = parseInt(uRaw,10);
   const preview = pendingImport.dataRows.slice(0,6);
   body.innerHTML = preview.map(row=>{
     const dataIso = parseDateCell_(row[dIdx]);
@@ -473,8 +445,11 @@ function renderImportPreviewTable(){
 }
 async function confirmImport(){
   if(!pendingImport) return;
-  const dIdx = parseInt(document.getElementById('map-data').value,10);
-  const uIdx = parseInt(document.getElementById('map-usuario').value,10);
+  const dRaw = document.getElementById('map-data').value;
+  const uRaw = document.getElementById('map-usuario').value;
+  if(dRaw===''||uRaw===''){ alert('Selecione a coluna de data e a coluna de usuário antes de confirmar.'); return; }
+  const dIdx = parseInt(dRaw,10);
+  const uIdx = parseInt(uRaw,10);
   const tIdxRaw = document.getElementById('map-tipo').value;
   const keyword = document.getElementById('map-os-keyword').value;
 
@@ -487,7 +462,7 @@ async function confirmImport(){
     const subtipo = classifySubtipo(row, tIdxRaw, keyword);
     parsed.push({data:dataIso, usuario, subtipo});
   });
-  if(parsed.length===0){ alert('Nenhuma linha com data e usuário válidos para importar.'); return; }
+  if(parsed.length===0){ alert('Nenhuma linha com data e usuário válidos para importar. Confira se escolheu as colunas certas — '+skipped+' linha(s) foram ignoradas.'); return; }
 
   const datesInFile = [...new Set(parsed.map(p=>p.data))].sort();
   const existingDates = datesInFile.filter(d => records.some(r=>r.data===d && r.tipo==='ticket'));
@@ -554,7 +529,8 @@ function renderStats(){
   const s = daySummary(records);
   document.getElementById('stats').innerHTML = `
     <div class="stat amber"><div class="lbl">Orçamento total</div><div class="val">${fmtBRL(s.orcTotal)}</div></div>
-    <div class="stat teal"><div class="lbl">Tickets totais</div><div class="val">${s.ticketsTotal}</div></div>
+    <div class="stat teal"><div class="lbl">TAs válidos</div><div class="val">${s.taCount}</div></div>
+    <div class="stat"><div class="lbl">TAs totais</div><div class="val">${s.ticketsTotal}</div></div>
     <div class="stat rose"><div class="lbl">Transferidos p/ OS</div><div class="val">${s.osCount}</div></div>
     <div class="stat"><div class="lbl">Dias registrados</div><div class="val">${Object.keys(groupBy(records,r=>r.data)).length}</div></div>
   `;
@@ -562,19 +538,7 @@ function renderStats(){
 function renderLancar(){
   const orcRec = records.find(r=>r.data===selectedDate && r.tipo==='orcamento');
   document.getElementById('f-orc-valor').value = orcRec ? orcRec.valor : '';
-  document.getElementById('orc-atual').textContent = orcRec ? '— atual: '+fmtBRL(orcRec.valor) : '— nada lançado para '+fmtDateBR(selectedDate);
-
-  const dayTickets = records.filter(r=>r.data===selectedDate && r.tipo==='ticket').sort((a,b)=>a.usuario.localeCompare(b.usuario,'pt-BR'));
-  const body = document.getElementById('today-body');
-  if(dayTickets.length===0){
-    body.innerHTML = '<tr><td colspan="3" class="empty">Nenhum TA lançado para '+fmtDateBR(selectedDate)+' ainda.</td></tr>';
-  } else {
-    body.innerHTML = dayTickets.map(r=>`
-      <tr><td>${r.usuario}</td><td>${r.subtipo==='OS'?'<span class="tag os">Transferido p/ OS</span>':'<span class="tag ta">Válido</span>'}</td>
-      <td style="text-align:right"><button class="del-btn" onclick="deleteEntry('${r.id}')">×</button></td></tr>
-    `).join('');
-  }
-  document.getElementById('lista-usuarios').innerHTML = usuariosUnicos().map(u=>`<option value="${u}">`).join('');
+  document.getElementById('orc-atual').textContent = orcRec ? '— atual em '+fmtDateBR(selectedDate)+': '+fmtBRL(orcRec.valor) : '— nada lançado para '+fmtDateBR(selectedDate);
 }
 function breakdownHtml(s){
   const rows = Object.entries(s.byUser).sort((a,b)=>b[1].ta-a[1].ta || a[0].localeCompare(b[0],'pt-BR'));
