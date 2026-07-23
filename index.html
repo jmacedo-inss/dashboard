@@ -620,13 +620,19 @@ function groupBy(arr, keyFn){
 
 const GOALS = { orcamento: 40000, validos: 600, validosPorConsultor: 200 };
 
-function referenceDate_(){
-  const ticketDates = records.filter(r=>r.tipo==='ticket').map(r=>normalizeDateStr_(r.data));
-  const allDates = ticketDates.length>0 ? ticketDates : records.map(r=>normalizeDateStr_(r.data));
-  if(allDates.length===0) return new Date();
+function referenceInfo_(){
+  const validDate = /^\d{4}-\d{2}-\d{2}$/;
+  const ticketDates = records.filter(r=>r.tipo==='ticket').map(r=>normalizeDateStr_(r.data)).filter(d=>validDate.test(d));
+  const allDates = ticketDates.length>0 ? ticketDates : records.map(r=>normalizeDateStr_(r.data)).filter(d=>validDate.test(d));
+  if(allDates.length===0){
+    const t = todayStr();
+    return { mk: monthKey(t), daysElapsed: parseInt(t.slice(8,10),10), daysInMonth: new Date(parseInt(t.slice(0,4),10), parseInt(t.slice(5,7),10), 0).getDate() };
+  }
   const maxStr = allDates.reduce((max,d)=> d>max?d:max, allDates[0]);
-  const d = new Date(maxStr+'T00:00:00');
-  return isNaN(d.getTime()) ? new Date() : d;
+  const yy = parseInt(maxStr.slice(0,4),10);
+  const mm = parseInt(maxStr.slice(5,7),10);
+  const dd = parseInt(maxStr.slice(8,10),10);
+  return { mk: monthKey(maxStr), daysElapsed: dd, daysInMonth: new Date(yy, mm, 0).getDate() };
 }
 function monthProgress(currentValue, goal, daysElapsed, daysInMonth){
   const pct = goal>0 ? (currentValue/goal*100) : 0;
@@ -634,16 +640,13 @@ function monthProgress(currentValue, goal, daysElapsed, daysInMonth){
   return {pct, projection};
 }
 function renderGoalCards(){
-  const refDate = referenceDate_();
-  const mk = refDate.getFullYear()+'-'+String(refDate.getMonth()+1).padStart(2,'0');
-  const daysInMonth = new Date(refDate.getFullYear(), refDate.getMonth()+1, 0).getDate();
-  const daysElapsed = refDate.getDate();
-  const monthRecs = records.filter(r=>monthKey(r.data)===mk);
+  const info = referenceInfo_();
+  const monthRecs = records.filter(r=>monthKey(normalizeDateStr_(r.data))===info.mk);
   const s = daySummary(monthRecs);
-  const mesLabel = monthLabel(mk);
+  const mesLabel = monthLabel(info.mk);
 
-  const orc = monthProgress(s.orcTotal, GOALS.orcamento, daysElapsed, daysInMonth);
-  const val = monthProgress(s.taCount, GOALS.validos, daysElapsed, daysInMonth);
+  const orc = monthProgress(s.orcTotal, GOALS.orcamento, info.daysElapsed, info.daysInMonth);
+  const val = monthProgress(s.taCount, GOALS.validos, info.daysElapsed, info.daysInMonth);
 
   document.getElementById('goal-cards').innerHTML = `
     <div class="goal-card">
