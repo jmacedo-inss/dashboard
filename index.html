@@ -622,17 +622,19 @@ const GOALS = { orcamento: 40000, validos: 600, validosPorConsultor: 200 };
 
 function referenceInfo_(){
   const validDate = /^\d{4}-\d{2}-\d{2}$/;
-  const ticketDates = records.filter(r=>r.tipo==='ticket').map(r=>normalizeDateStr_(r.data)).filter(d=>validDate.test(d));
+  const allTickets = records.filter(r=>r.tipo==='ticket');
+  const ticketDates = allTickets.map(r=>normalizeDateStr_(r.data)).filter(d=>validDate.test(d));
+  const invalidCount = allTickets.length - ticketDates.length;
   const allDates = ticketDates.length>0 ? ticketDates : records.map(r=>normalizeDateStr_(r.data)).filter(d=>validDate.test(d));
   if(allDates.length===0){
     const t = todayStr();
-    return { mk: monthKey(t), daysElapsed: parseInt(t.slice(8,10),10), daysInMonth: new Date(parseInt(t.slice(0,4),10), parseInt(t.slice(5,7),10), 0).getDate() };
+    return { mk: monthKey(t), daysElapsed: parseInt(t.slice(8,10),10), daysInMonth: new Date(parseInt(t.slice(0,4),10), parseInt(t.slice(5,7),10), 0).getDate(), totalTickets: allTickets.length, validDates: 0, invalidCount };
   }
   const maxStr = allDates.reduce((max,d)=> d>max?d:max, allDates[0]);
   const yy = parseInt(maxStr.slice(0,4),10);
   const mm = parseInt(maxStr.slice(5,7),10);
   const dd = parseInt(maxStr.slice(8,10),10);
-  return { mk: monthKey(maxStr), daysElapsed: dd, daysInMonth: new Date(yy, mm, 0).getDate() };
+  return { mk: monthKey(maxStr), daysElapsed: dd, daysInMonth: new Date(yy, mm, 0).getDate(), totalTickets: allTickets.length, validDates: ticketDates.length, invalidCount };
 }
 function monthProgress(currentValue, goal, daysElapsed, daysInMonth){
   const pct = goal>0 ? (currentValue/goal*100) : 0;
@@ -647,6 +649,7 @@ function renderGoalCards(){
 
   const orc = monthProgress(s.orcTotal, GOALS.orcamento, info.daysElapsed, info.daysInMonth);
   const val = monthProgress(s.taCount, GOALS.validos, info.daysElapsed, info.daysInMonth);
+  const debugLine = `mês usado: ${info.mk} · TAs com data reconhecida: ${info.validDates}/${info.totalTickets} (${info.invalidCount} com data não reconhecida) · lançamentos considerados no mês: ${monthRecs.length}`;
 
   document.getElementById('goal-cards').innerHTML = `
     <div class="goal-card">
@@ -671,7 +674,7 @@ function renderGoalCards(){
         <div class="goal-mini"><div class="lbl">Projeção fim do mês</div><div class="val">${Math.round(val.projection)}</div></div>
       </div>
     </div>
-  `;
+  ` + `<p class="hint" style="grid-column:1/-1;margin-top:2px;">${debugLine}</p>`;
 }
 function renderStats(){
   const s = daySummary(records);
