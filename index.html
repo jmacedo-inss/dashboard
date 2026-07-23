@@ -75,6 +75,9 @@
   .upload-box span{color:var(--text-faint);font-size:12px;max-width:260px;}
 
   #upload-preview{margin-top:16px;border-top:1px solid var(--border-soft);padding-top:16px;}
+  #import-progress-wrap{margin-top:14px;}
+  .progress-track{position:relative;width:100%;height:6px;background:var(--surface-2);border-radius:4px;overflow:hidden;margin-top:8px;}
+  .progress-fill{height:100%;width:0%;background:var(--teal);border-radius:4px;transition:width .35s ease;}
   .map-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px;}
 
   table{width:100%;border-collapse:collapse;font-size:13.5px;}
@@ -219,9 +222,14 @@
           <tbody id="preview-body"></tbody>
         </table>
         <div style="display:flex;gap:10px;margin-top:14px;">
-          <button class="primary" onclick="confirmImport()">Confirmar importação</button>
+          <button class="primary" id="btn-confirm-import" onclick="confirmImport()">Confirmar importação</button>
           <button class="ghost" onclick="cancelImport()">Cancelar</button>
         </div>
+      </div>
+
+      <div id="import-progress-wrap" style="display:none;">
+        <p id="import-progress-label" class="hint">Importando TAs...</p>
+        <div class="progress-track"><div class="progress-fill"></div></div>
       </div>
     </div>
 
@@ -275,7 +283,8 @@ function todayStr(){
 const USER_NAME_MAP = {
   'dpedro.bferr***': 'Bruna Ferrari',
   'dpedro.mcarva***': 'Marcela Carvalho',
-  'dpedro.jhalc***': 'Jéssica Halcsik'
+  'dpedro.jhalc***': 'Jéssica Halcsik',
+  'dpedro.g***': 'Guilherme Menezes'
 };
 function displayName(usuario){ return USER_NAME_MAP[usuario] || usuario; }
 function fmtBRL(v){ return (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
@@ -475,6 +484,8 @@ async function confirmImport(){
 
   const parsed = [];
   let skipped = 0;
+  showImportProgress();
+  setImportProgress(15, 'Lendo linhas da planilha...');
   pendingImport.dataRows.forEach(row=>{
     const dataIso = parseDateCell_(row[dIdx]);
     const usuario = String(row[uIdx]||'').trim();
@@ -482,7 +493,8 @@ async function confirmImport(){
     const subtipo = classifySubtipo(row, tIdxRaw, keyword);
     parsed.push({data:dataIso, usuario, subtipo});
   });
-  if(parsed.length===0){ alert('Nenhuma linha com data e usuário válidos para importar. Confira se escolheu as colunas certas — '+skipped+' linha(s) foram ignoradas.'); return; }
+  if(parsed.length===0){ hideImportProgress(); alert('Nenhuma linha com data e usuário válidos para importar. Confira se escolheu as colunas certas — '+skipped+' linha(s) foram ignoradas.'); return; }
+  setImportProgress(40, 'Organizando por data e usuário...');
 
   const datesInFile = [...new Set(parsed.map(p=>p.data))].sort();
   const existingDates = datesInFile.filter(d => records.some(r=>r.data===d && r.tipo==='ticket'));
@@ -491,6 +503,7 @@ async function confirmImport(){
     const replace = confirm('Já existem TAs lançados para: '+list+'. OK para substituir esses dias, Cancelar para somar aos já existentes.');
     if(replace) records = records.filter(r=>!(r.tipo==='ticket' && existingDates.includes(r.data)));
   }
+  setImportProgress(60, 'Preparando lançamentos...');
 
   parsed.forEach(p=>{
     records.push({id:uid(), data:p.data, tipo:'ticket', subtipo:p.subtipo, usuario:p.usuario, valor:0});
@@ -499,9 +512,32 @@ async function confirmImport(){
   document.getElementById('upload-preview').style.display = 'none';
   selectedDate = datesInFile[datesInFile.length-1];
   document.getElementById('f-data').value = selectedDate;
+  setImportProgress(80, 'Salvando e sincronizando com Google Sheets...');
   await persistAndSync();
   renderAll();
+  setImportProgress(100, 'Concluído!');
+  await new Promise(r=>setTimeout(r,400));
+  hideImportProgress();
   alert(parsed.length+' TA(s) importado(s) em '+datesInFile.length+' dia(s)'+(skipped>0?' ('+skipped+' linha(s) ignorada(s) por falta de data ou usuário)':'')+'.');
+}
+function showImportProgress(){
+  const wrap = document.getElementById('import-progress-wrap');
+  const btn = document.getElementById('btn-confirm-import');
+  if(wrap) wrap.style.display = 'block';
+  if(btn) btn.disabled = true;
+  setImportProgress(0, 'Importando TAs...');
+}
+function setImportProgress(pct, label){
+  const fill = document.querySelector('#import-progress-wrap .progress-fill');
+  const labelEl = document.getElementById('import-progress-label');
+  if(fill) fill.style.width = pct+'%';
+  if(labelEl && label) labelEl.textContent = label;
+}
+function hideImportProgress(){
+  const wrap = document.getElementById('import-progress-wrap');
+  const btn = document.getElementById('btn-confirm-import');
+  if(wrap) wrap.style.display = 'none';
+  if(btn) btn.disabled = false;
 }
 function cancelImport(){
   pendingImport = null;
