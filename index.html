@@ -40,24 +40,30 @@
   details.cfg-panel .cfg-inner{padding:0 16px 16px;}
 
   .goal-cards{display:grid;grid-template-columns:1fr 1.6fr 0.9fr;gap:14px;margin-bottom:16px;}
-  .goal-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow);display:flex;flex-direction:column;}
+  .goal-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:13px 18px;box-shadow:var(--shadow);display:flex;flex-direction:column;}
   .goal-card .gc-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;}
   .goal-card .gc-title{font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;font-weight:600;}
   .goal-card .gc-value{font-family:'IBM Plex Mono';font-size:24px;font-weight:700;color:var(--text);margin-top:2px;}
+  .gc-goal-suffix{font-size:14px;font-weight:500;color:var(--text-faint);margin-left:3px;}
   .goal-card .gc-pct{font-family:'IBM Plex Mono';font-size:13px;color:var(--text-dim);font-weight:600;}
-  .goal-track{position:relative;width:100%;height:8px;background:var(--surface-3);border-radius:5px;overflow:hidden;margin:12px 0 14px;}
+  .goal-track{position:relative;width:100%;height:8px;background:var(--surface-3);border-radius:5px;overflow:hidden;margin:9px 0 10px;}
   .goal-track.small{height:5px;margin:4px 0 0;}
   .goal-fill{height:100%;border-radius:5px;transition:width .5s ease;}
   .goal-fill.orc{background:linear-gradient(90deg, var(--accent), var(--accent-2));}
   .goal-fill.valid{background:linear-gradient(90deg, var(--accent), var(--accent-2));}
-  .goal-minis{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1;}
   .goal-mini{background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;text-align:center;display:flex;flex-direction:column;justify-content:center;}
+  .gc-stack{display:flex;flex-direction:column;justify-content:center;gap:6px;flex:1;}
+  .gc-stack{display:flex;flex-direction:column;gap:8px;flex:1;}
+  .gc-stack .goal-mini{flex:1;text-align:left;display:flex;flex-direction:column;justify-content:center;padding:6px 14px;}
+  .gc-stack .goal-mini .pm-row{display:flex;justify-content:space-between;align-items:baseline;}
+  .gc-stack .goal-mini .goal-track.small{margin-top:6px;}
+  .gc-stack .goal-mini.proj-mini .val{font-size:17px;color:var(--accent);}
   .goal-mini .lbl{font-size:9.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;}
   .goal-mini .val{font-family:'IBM Plex Mono';font-size:16px;font-weight:700;color:var(--text);margin-top:2px;}
   .goal-mini .note{font-size:8.5px;color:var(--text-faint);margin-top:1px;}
 
-  .goal-extra{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px;}
-  .goal-extra-item{background:var(--surface-3);border:1px solid var(--border);border-radius:6px;padding:5px 6px;text-align:center;}
+  .goal-extra{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px;}
+  .goal-extra-item{background:var(--surface-3);border:1px solid var(--border);border-radius:6px;padding:4px 6px;text-align:center;}
   .goal-extra-item .lbl{font-size:7.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.03em;line-height:1.2;}
   .goal-extra-item .val{font-family:'IBM Plex Mono';font-size:12.5px;font-weight:600;color:var(--text);margin-top:2px;}
 
@@ -151,6 +157,11 @@
   .filters select,.filters input{width:auto;}
 
   ::placeholder{color:var(--text-faint);}
+  .modal-overlay{position:fixed;inset:0;background:rgba(16,24,39,0.45);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;}
+  .modal-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px 24px;max-width:400px;box-shadow:var(--shadow);}
+  .modal-message{font-size:13.5px;color:var(--text);line-height:1.55;margin:0 0 18px;white-space:pre-line;}
+  .modal-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
+
   @media(max-width:720px){
     .goal-cards{grid-template-columns:1fr;}
     .tas-grid{grid-template-columns:1fr;}
@@ -210,7 +221,7 @@
         </div>
         <div class="field">
           <label>Valor total (R$)</label>
-          <input type="number" id="f-orc-valor" class="mono" step="0.01" min="0" placeholder="0,00">
+          <input type="text" inputmode="decimal" id="f-orc-valor" class="mono" placeholder="0,00" oninput="maskCurrency(this)">
         </div>
         <button class="primary" onclick="saveOrcamento()">Salvar orçamento</button>
       </div>
@@ -300,6 +311,13 @@
     </div>
   </section>
 
+</div>
+
+<div id="modal-overlay" class="modal-overlay" style="display:none">
+  <div class="modal-box">
+    <p id="modal-message" class="modal-message"></p>
+    <div class="modal-actions" id="modal-actions"></div>
+  </div>
 </div>
 
 <script>
@@ -406,10 +424,55 @@ async function fetchFromSheets(){
 }
 async function persistAndSync(){ await saveData(); await syncToSheets(); }
 
+function maskCurrency(el){
+  const digits = el.value.replace(/\D/g,'');
+  if(digits===''){ el.value=''; return; }
+  const cents = parseInt(digits,10);
+  el.value = (cents/100).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function parseCurrencyInput(str){
+  if(!str) return 0;
+  const n = parseFloat(String(str).replace(/\./g,'').replace(',','.'));
+  return isNaN(n) ? 0 : n;
+}
+
+function showChoiceModal(message, options){
+  return new Promise(resolve=>{
+    const overlay = document.getElementById('modal-overlay');
+    document.getElementById('modal-message').textContent = message;
+    const actions = document.getElementById('modal-actions');
+    actions.innerHTML = '';
+    options.forEach(opt=>{
+      const btn = document.createElement('button');
+      btn.className = opt.primary ? 'primary' : 'ghost';
+      btn.textContent = opt.label;
+      btn.onclick = ()=>{ overlay.style.display = 'none'; resolve(opt.value); };
+      actions.appendChild(btn);
+    });
+    overlay.style.display = 'flex';
+  });
+}
+
 async function saveOrcamento(){
-  const valor = parseFloat(document.getElementById('f-orc-valor').value) || 0;
+  const novoValor = parseCurrencyInput(document.getElementById('f-orc-valor').value);
+  const existing = records.find(r => r.data===selectedDate && r.tipo==='orcamento');
+
+  let valorFinal = novoValor;
+  if(existing && novoValor>0){
+    const choice = await showChoiceModal(
+      'Já existe um orçamento de '+fmtBRL(existing.valor)+' lançado para '+fmtDateBR(selectedDate)+'.\n\nO que deseja fazer com o novo valor de '+fmtBRL(novoValor)+'?',
+      [
+        {label:'Somar', value:'somar', primary:true},
+        {label:'Atualizar', value:'atualizar'},
+        {label:'Cancelar', value:'cancelar'}
+      ]
+    );
+    if(choice==='cancelar') return;
+    valorFinal = choice==='somar' ? existing.valor + novoValor : novoValor;
+  }
+
   records = records.filter(r => !(r.data===selectedDate && r.tipo==='orcamento'));
-  if(valor>0) records.push({id:uid(), data:selectedDate, tipo:'orcamento', subtipo:null, usuario:'Geral', valor});
+  if(valorFinal>0) records.push({id:uid(), data:selectedDate, tipo:'orcamento', subtipo:null, usuario:'Geral', valor:valorFinal});
   await persistAndSync();
   renderAll();
 }
@@ -671,24 +734,28 @@ function renderGoalCards(){
   document.getElementById('goal-cards').innerHTML = `
     <div class="goal-card">
       <div class="gc-head">
-        <div><div class="gc-title">Orçamento — ${mesLabel}</div><div class="gc-value">${fmtBRL(s.orcTotal)}</div></div>
+        <div><div class="gc-title">Orçamento — ${mesLabel}</div><div class="gc-value">${fmtBRL(s.orcTotal)}<span class="gc-goal-suffix">/${fmtBRL(GOALS.orcamento)}</span></div></div>
         <div class="gc-pct">${orc.pct.toFixed(0)}%</div>
       </div>
       <div class="goal-track"><div class="goal-fill orc" style="width:${Math.min(orc.pct,100)}%"></div></div>
-      <div class="goal-minis">
-        <div class="goal-mini"><div class="lbl">Meta</div><div class="val">${fmtBRL(GOALS.orcamento)}</div></div>
-        <div class="goal-mini"><div class="lbl">Projeção</div><div class="val">${fmtBRL(orc.projection)}</div></div>
+      <div class="gc-stack">
+        <div class="goal-mini proj-mini">
+          <div class="pm-row"><span class="lbl">Projeção</span><span class="val">${fmtBRL(orc.projection)}</span></div>
+          <div class="goal-track small"><div class="goal-fill orc" style="width:${Math.min(orc.projection/GOALS.orcamento*100,100)}%"></div></div>
+        </div>
       </div>
     </div>
     <div class="goal-card">
       <div class="gc-head">
-        <div><div class="gc-title">TAs válidos — ${mesLabel}</div><div class="gc-value">${s.taCount}</div></div>
+        <div><div class="gc-title">TAs válidos — ${mesLabel}</div><div class="gc-value">${s.taCount}<span class="gc-goal-suffix">/${GOALS.validos}</span></div></div>
         <div class="gc-pct">${val.pct.toFixed(0)}%</div>
       </div>
       <div class="goal-track"><div class="goal-fill valid" style="width:${Math.min(val.pct,100)}%"></div></div>
-      <div class="goal-minis">
-        <div class="goal-mini"><div class="lbl">Meta</div><div class="val">${GOALS.validos}</div><div class="note">${GOALS.validosPorConsultor} / consultor</div></div>
-        <div class="goal-mini"><div class="lbl">Projeção</div><div class="val">${Math.round(val.projection)}</div></div>
+      <div class="gc-stack">
+        <div class="goal-mini proj-mini">
+          <div class="pm-row"><span class="lbl">Projeção</span><span class="val">${Math.round(val.projection)}</span></div>
+          <div class="goal-track small"><div class="goal-fill valid" style="width:${Math.min(val.projection/GOALS.validos*100,100)}%"></div></div>
+        </div>
       </div>
       <div class="goal-extra">
         <div class="goal-extra-item"><div class="lbl">TAs totais (histórico)</div><div class="val">${allTime.ticketsTotal}</div></div>
@@ -705,7 +772,7 @@ function renderGoalCards(){
 }
 function renderLancar(){
   const orcRec = records.find(r=>r.data===selectedDate && r.tipo==='orcamento');
-  document.getElementById('f-orc-valor').value = orcRec ? orcRec.valor : '';
+  document.getElementById('f-orc-valor').value = orcRec ? orcRec.valor.toLocaleString('pt-BR',{minimumFractionDigits:2, maximumFractionDigits:2}) : '';
   document.getElementById('orc-atual').textContent = orcRec ? '— atual em '+fmtDateBR(selectedDate)+': '+fmtBRL(orcRec.valor) : '— nada lançado para '+fmtDateBR(selectedDate);
 }
 function renderPeriodTable(elId, groups, labelFn){
