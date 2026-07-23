@@ -61,7 +61,7 @@
   .goal-extra-item .lbl{font-size:7.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.03em;line-height:1.2;}
   .goal-extra-item .val{font-family:'IBM Plex Mono';font-size:12.5px;font-weight:600;color:var(--text);margin-top:2px;}
 
-  .rank-card .rank-sub{font-size:9.5px;color:var(--text-faint);font-weight:400;text-transform:none;letter-spacing:0;}
+  .rank-month{font-family:'IBM Plex Mono';font-size:11px;color:var(--text-faint);margin-top:2px;}
   .rank-list{display:flex;flex-direction:column;gap:7px;margin-top:10px;}
   .rank-row .rank-top{display:flex;justify-content:space-between;align-items:baseline;font-size:11.5px;gap:8px;}
   .rank-row .rank-name{color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -697,7 +697,8 @@ function renderGoalCards(){
       </div>
     </div>
     <div class="goal-card rank-card">
-      <div class="gc-title">Ranking de TAs válidos — ${mesLabel} <span class="rank-sub">(meta ${GOALS.validosPorConsultor}/consultor)</span></div>
+      <div class="gc-title">Ranking de TAs válidos</div>
+      <div class="rank-month">${mesLabel}</div>
       <div class="rank-list">${rankingHtml}</div>
     </div>
   `;
