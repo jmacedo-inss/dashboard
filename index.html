@@ -199,10 +199,30 @@
   .cor-picker-wrap span{font-size:0.82em;color:var(--text-dim);text-transform:uppercase;}
   .unidade-cor-dot{width:0.65em;height:0.65em;border-radius:50%;flex-shrink:0;display:inline-block;margin-right:0.5em;}
 
-  .unidade-chip,.unidade-select-wrap{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:0 10px;height:2.3em;font-size:12.5px;color:var(--text-dim);}
-  .unidade-select-wrap select{border:none;background:none;padding:0;height:auto;font-size:12.5px;color:var(--text);}
-  .user-chip{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-dim);padding:0 4px;white-space:nowrap;}
-  .user-chip b{color:var(--text);}
+  .unidade-seletor-wrap{display:flex;align-items:center;gap:0.4em;}
+  .unidade-seletor-wrap[hidden]{display:none;}
+  .unidade-seletor-wrap svg{width:1.1em;height:1.1em;color:var(--text-dim);flex-shrink:0;}
+  #seletor-unidade{height:2.3em;padding:0 1.8em 0 0.6em;border-radius:0.65em;background:var(--surface);border:1px solid var(--border);font-size:0.84em;font-family:'Manrope';font-weight:600;color:var(--text);cursor:pointer;}
+  .unidade-fixa-chip{display:flex;align-items:center;gap:0.4em;height:2.3em;padding:0 0.8em;border-radius:0.65em;background:var(--surface);border:1px solid var(--border);font-size:0.84em;font-weight:600;color:var(--text-dim);}
+  .unidade-fixa-chip[hidden]{display:none;}
+  .unidade-fixa-chip svg{width:1.05em;height:1.05em;}
+
+  .user-menu-wrap{position:relative;}
+  .user-chip{display:flex;align-items:center;gap:0.5em;height:2.3em;padding:0 0.8em 0 0.5em;border-radius:0.65em;background:var(--surface);border:1px solid var(--border);cursor:pointer;font-size:0.84em;font-family:'Manrope';font-weight:600;color:var(--text);transition:border-color .15s ease;}
+  .user-chip:hover{border-color:var(--accent);}
+  .user-chip .avatar{width:1.6em;height:1.6em;border-radius:50%;background:linear-gradient(135deg, var(--accent), var(--accent-2));color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.78em;font-weight:800;flex-shrink:0;}
+  .user-chip svg{width:0.9em;height:0.9em;color:var(--text-faint);}
+  .user-dropdown{position:absolute;top:calc(100% + 0.5em);right:0;min-width:13em;background:var(--surface);border:1px solid var(--border);border-radius:0.75em;box-shadow:var(--shadow);padding:0.4em;z-index:40;opacity:0;visibility:hidden;transform:translateY(-6px);transition:opacity .15s ease, transform .15s ease, visibility .15s ease;}
+  .user-dropdown.open{opacity:1;visibility:visible;transform:translateY(0);}
+  .user-dropdown .info{padding:0.5em 0.6em 0.6em;border-bottom:1px solid var(--border-soft);margin-bottom:0.3em;}
+  .user-dropdown .info .n{font-weight:700;font-size:0.86em;font-family:'Manrope';}
+  .user-dropdown .info .u{font-size:0.74em;color:var(--text-faint);}
+  .user-dropdown button{width:100%;text-align:left;background:none;border:none;padding:0.55em 0.6em;border-radius:0.5em;font-size:0.84em;font-family:'Manrope';color:var(--text);cursor:pointer;display:flex;align-items:center;gap:0.55em;}
+  .user-dropdown button[hidden]{display:none;}
+  .user-dropdown button:hover{background:var(--surface-2);}
+  .user-dropdown button svg{width:1em;height:1em;color:var(--text-dim);flex-shrink:0;}
+  .user-dropdown button.sair{color:var(--rose);}
+  .user-dropdown button.sair svg{color:var(--rose);}
 
   @media(max-width:720px){
     .goal-cards{grid-template-columns:1fr;}
@@ -238,25 +258,48 @@
       </div>
     </div>
     <div class="right">
-      <div id="unidade-area"></div>
-      <span id="user-chip" class="user-chip"></span>
-      <button id="btn-unidades" class="icon-btn" onclick="abrirModalUnidades()" title="Gerenciar unidades" hidden>
+      <div class="unidade-seletor-wrap" id="unidade-seletor-wrap" hidden>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M5 21V7l8-4v18"></path><path d="M19 21V11l-6-4"></path></svg>
-      </button>
-      <button id="btn-usuarios" class="icon-btn" onclick="abrirModalUsuarios()" title="Gerenciar usuários" hidden>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-      </button>
-      <button id="btn-sair" class="icon-btn" onclick="sair()" title="Sair">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-      </button>
+        <select id="seletor-unidade" onchange="trocarUnidade(this.value)"></select>
+      </div>
+      <div class="unidade-fixa-chip" id="unidade-fixa-chip" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M5 21V7l8-4v18"></path><path d="M19 21V11l-6-4"></path></svg>
+        <span id="unidade-fixa-nome">—</span>
+      </div>
       <button id="refresh-btn" class="icon-btn" onclick="manualRefresh()" title="Atualizar dados">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
       </button>
       <button id="export-btn" class="icon-btn" onclick="exportExcel()" title="Exportar Excel">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
       </button>
+      <div class="user-menu-wrap">
+        <button class="user-chip" id="user-chip" onclick="toggleUserDropdown(event)">
+          <span class="avatar" id="user-avatar">?</span><span id="user-chip-nome">—</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <div class="user-dropdown" id="user-dropdown">
+          <div class="info"><div class="n" id="user-dropdown-nome">—</div><div class="u" id="user-dropdown-nivel">—</div></div>
+          <button type="button" onclick="abrirModalSenha()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>Trocar senha</button>
+          <button type="button" id="btn-usuarios" onclick="abrirModalUsuarios()" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Gerenciar usuários</button>
+          <button type="button" id="btn-unidades" onclick="abrirModalUnidades()" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M5 21V7l8-4v18"></path><path d="M19 21V11l-6-4"></path></svg>Gerenciar unidades</button>
+          <button type="button" class="sair" onclick="sair()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>Sair</button>
+        </div>
+      </div>
     </div>
   </header>
+
+  <div class="modal-overlay" id="modal-senha" style="display:none">
+    <div class="modal-box">
+      <h3 style="margin:0 0 14px;font-family:'Outfit';font-size:15px;">Trocar senha</h3>
+      <form onsubmit="salvarNovaSenha(event)">
+        <div class="field" style="margin-bottom:14px;"><label>Nova senha</label><input type="password" id="senha-nova" required></div>
+        <div class="modal-actions">
+          <button type="button" class="ghost" onclick="fecharModal('modal-senha')">Cancelar</button>
+          <button type="submit" class="primary">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <div class="modal-overlay" id="modal-unidades" style="display:none">
     <div class="modal-box wide">
@@ -449,7 +492,7 @@ const DEFAULT_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwUPiM0CxhMc
 let records = [];
 let config = {sheetsUrl: DEFAULT_SHEETS_URL};
 let selectedDate = todayStr();
-let session = {nome:'', usuario:'', nivel:'', unidadeId:'', unidades:[]};
+let session = {id:'', nome:'', usuario:'', nivel:'', unidadeId:'', unidades:[]};
 let unidadesTodasCache = [];
 let pendingImport = null;
 
@@ -1089,36 +1132,68 @@ function hexParaRgb_(hex){
   return { r:(n>>16)&255, g:(n>>8)&255, b:n&255 };
 }
 function renderUnidadeArea(){
-  const area = document.getElementById('unidade-area');
-  const pin = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M5 21V7l8-4v18"></path><path d="M19 21V11l-6-4"></path></svg>';
-  if(session.unidades.length>1){
-    area.innerHTML = `<div class="unidade-select-wrap" id="unidade-select-wrap">${pin}<select id="unidade-select" onchange="trocarUnidade(this.value)">${session.unidades.map(u=>`<option value="${u.id}" ${u.id===session.unidadeId?'selected':''}>${u.nome}</option>`).join('')}</select></div>`;
+  const multi = session.unidades.length > 1;
+  const seletorWrap = document.getElementById('unidade-seletor-wrap');
+  const fixaChip = document.getElementById('unidade-fixa-chip');
+  seletorWrap.hidden = !multi;
+  fixaChip.hidden = multi;
+  if(multi){
+    const sel = document.getElementById('seletor-unidade');
+    sel.innerHTML = session.unidades.map(u=>`<option value="${u.id}" ${u.id===session.unidadeId?'selected':''}>${u.nome}</option>`).join('');
     aplicarCorSeletorUnidade_();
   } else if(session.unidades.length===1){
-    const u = session.unidades[0];
-    area.innerHTML = `<div class="unidade-chip" id="unidade-select-wrap">${pin}${u.nome}</div>`;
-    aplicarCorSeletorUnidade_();
+    document.getElementById('unidade-fixa-nome').textContent = session.unidades[0].nome;
   } else {
-    area.innerHTML = `<div class="unidade-chip">Nenhuma unidade</div>`;
+    fixaChip.hidden = false;
+    document.getElementById('unidade-fixa-nome').textContent = 'Nenhuma unidade';
   }
 }
 function aplicarCorSeletorUnidade_(){
-  const wrap = document.getElementById('unidade-select-wrap');
-  if(!wrap) return;
+  const sel = document.getElementById('seletor-unidade');
+  if(!sel) return;
   const atual = currentUnidadeObj();
   const rgb = hexParaRgb_(atual && atual.cor);
   if(rgb){
-    wrap.style.background = `rgba(${rgb.r},${rgb.g},${rgb.b},0.14)`;
-    wrap.style.borderColor = atual.cor;
+    sel.style.background = `rgba(${rgb.r},${rgb.g},${rgb.b},0.14)`;
+    sel.style.borderColor = atual.cor;
   } else {
-    wrap.style.background = '';
-    wrap.style.borderColor = '';
+    sel.style.background = '';
+    sel.style.borderColor = '';
   }
 }
 function renderUserChip(){
-  document.getElementById('user-chip').innerHTML = `<b>${session.nome}</b>`;
+  document.getElementById('user-chip-nome').textContent = session.nome;
+  document.getElementById('user-avatar').textContent = (session.nome||'?').trim().charAt(0).toUpperCase();
+  document.getElementById('user-dropdown-nome').textContent = session.nome;
+  document.getElementById('user-dropdown-nivel').textContent = session.nivel === 'admin' ? 'Administrador' : 'Usuário comum';
   document.getElementById('btn-unidades').hidden = session.nivel !== 'admin';
   document.getElementById('btn-usuarios').hidden = session.nivel !== 'admin';
+}
+function toggleUserDropdown(ev){
+  ev.stopPropagation();
+  document.getElementById('user-dropdown').classList.toggle('open');
+}
+document.addEventListener('click', ()=>{
+  const dd = document.getElementById('user-dropdown');
+  if(dd) dd.classList.remove('open');
+});
+function abrirModalSenha(){
+  document.getElementById('user-dropdown').classList.remove('open');
+  document.getElementById('senha-nova').value = '';
+  document.getElementById('modal-senha').style.display = 'flex';
+}
+async function salvarNovaSenha(ev){
+  ev.preventDefault();
+  const senha = document.getElementById('senha-nova').value;
+  if(!senha) return;
+  await fetch(config.sheetsUrl, {
+    method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({action:'saveUsuario', usuarioObj:{
+      id: session.id, nome: session.nome, usuario: session.usuario, senha, nivel: session.nivel, unidadeId: session.unidadeId
+    }})
+  });
+  fecharModal('modal-senha');
+  alert('Senha atualizada.');
 }
 async function atualizarUnidadesSessao_(){
   let todas = [];
@@ -1170,7 +1245,7 @@ async function fazerLogin(){
     const data = await res.json();
     if(!data.ok){ erroEl.textContent = data.erro || 'Não foi possível entrar.'; return; }
     session = {
-      nome: data.nome, usuario: data.usuario, nivel: data.nivel,
+      id: data.id, nome: data.nome, usuario: data.usuario, nivel: data.nivel,
       unidadeId: (data.unidades && data.unidades[0] && data.unidades[0].id) || '',
       unidades: data.unidades || []
     };
