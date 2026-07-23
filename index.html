@@ -39,6 +39,22 @@
   details.cfg-panel[open] summary:before{content:"▾ ";}
   details.cfg-panel .cfg-inner{padding:0 16px 16px;}
 
+  .goal-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;margin-bottom:16px;}
+  .goal-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px;box-shadow:var(--shadow);}
+  .goal-card .gc-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;}
+  .goal-card .gc-title{font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;font-weight:600;}
+  .goal-card .gc-value{font-family:'IBM Plex Mono';font-size:24px;font-weight:700;color:var(--text);margin-top:2px;}
+  .goal-card .gc-pct{font-family:'IBM Plex Mono';font-size:13px;color:var(--text-dim);font-weight:600;}
+  .goal-track{position:relative;width:100%;height:8px;background:var(--surface-3);border-radius:5px;overflow:hidden;margin:12px 0 14px;}
+  .goal-fill{height:100%;border-radius:5px;transition:width .5s ease;}
+  .goal-fill.orc{background:linear-gradient(90deg, var(--amber), #E0932A);}
+  .goal-fill.valid{background:linear-gradient(90deg, var(--teal), #17C79A);}
+  .goal-minis{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .goal-mini{background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;text-align:center;}
+  .goal-mini .lbl{font-size:9.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;}
+  .goal-mini .val{font-family:'IBM Plex Mono';font-size:16px;font-weight:700;color:var(--text);margin-top:2px;}
+  .goal-mini .note{font-size:8.5px;color:var(--text-faint);margin-top:1px;}
+
   .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:28px;}
   .stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow);}
   .stat .lbl{font-size:11.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;}
@@ -167,6 +183,7 @@
     </div>
   </details>
 
+  <div class="goal-cards" id="goal-cards"></div>
   <div class="stats" id="stats"></div>
 
   <nav class="tabs">
@@ -592,13 +609,57 @@ function groupBy(arr, keyFn){
   return g;
 }
 
+const GOALS = { orcamento: 40000, validos: 600, validosPorConsultor: 200 };
+
+function currentMonthRecords(){
+  const mk = monthKey(todayStr());
+  return records.filter(r=>monthKey(r.data)===mk);
+}
+function monthProgress(currentValue, goal){
+  const now = new Date();
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+  const daysElapsed = now.getDate();
+  const pct = goal>0 ? (currentValue/goal*100) : 0;
+  const projection = daysElapsed>0 ? (currentValue/daysElapsed)*daysInMonth : 0;
+  return {pct, projection};
+}
+function renderGoalCards(){
+  const s = daySummary(currentMonthRecords());
+  const mesLabel = monthLabel(monthKey(todayStr()));
+
+  const orc = monthProgress(s.orcTotal, GOALS.orcamento);
+  const val = monthProgress(s.taCount, GOALS.validos);
+
+  document.getElementById('goal-cards').innerHTML = `
+    <div class="goal-card">
+      <div class="gc-head">
+        <div><div class="gc-title">Orçamento — ${mesLabel}</div><div class="gc-value">${fmtBRL(s.orcTotal)}</div></div>
+        <div class="gc-pct">${orc.pct.toFixed(0)}%</div>
+      </div>
+      <div class="goal-track"><div class="goal-fill orc" style="width:${Math.min(orc.pct,100)}%"></div></div>
+      <div class="goal-minis">
+        <div class="goal-mini"><div class="lbl">Meta</div><div class="val">${fmtBRL(GOALS.orcamento)}</div></div>
+        <div class="goal-mini"><div class="lbl">Projeção fim do mês</div><div class="val">${fmtBRL(orc.projection)}</div></div>
+      </div>
+    </div>
+    <div class="goal-card">
+      <div class="gc-head">
+        <div><div class="gc-title">TAs válidos — ${mesLabel}</div><div class="gc-value">${s.taCount}</div></div>
+        <div class="gc-pct">${val.pct.toFixed(0)}%</div>
+      </div>
+      <div class="goal-track"><div class="goal-fill valid" style="width:${Math.min(val.pct,100)}%"></div></div>
+      <div class="goal-minis">
+        <div class="goal-mini"><div class="lbl">Meta</div><div class="val">${GOALS.validos}</div><div class="note">${GOALS.validosPorConsultor} / consultor</div></div>
+        <div class="goal-mini"><div class="lbl">Projeção fim do mês</div><div class="val">${Math.round(val.projection)}</div></div>
+      </div>
+    </div>
+  `;
+}
 function renderStats(){
   const s = daySummary(records);
   document.getElementById('stats').innerHTML = `
-    <div class="stat amber"><div class="lbl">Orçamento total</div><div class="val">${fmtBRL(s.orcTotal)}</div></div>
-    <div class="stat teal"><div class="lbl">TAs válidos</div><div class="val">${s.taCount}</div></div>
-    <div class="stat"><div class="lbl">TAs totais</div><div class="val">${s.ticketsTotal}</div></div>
-    <div class="stat rose"><div class="lbl">Transferidos p/ OS</div><div class="val">${s.osCount}</div></div>
+    <div class="stat"><div class="lbl">TAs totais (histórico)</div><div class="val">${s.ticketsTotal}</div></div>
+    <div class="stat rose"><div class="lbl">Transferidos p/ OS (histórico)</div><div class="val">${s.osCount}</div></div>
     <div class="stat"><div class="lbl">Dias registrados</div><div class="val">${Object.keys(groupBy(records,r=>r.data)).length}</div></div>
   `;
 }
@@ -681,7 +742,7 @@ function renderHistorico(){
       <td style="text-align:right"><button class="del-btn" onclick="deleteEntry('${r.id}')">×</button></td>
     </tr>`).join('');
 }
-function renderAll(){ renderStats(); renderLancar(); renderDiario(); renderSemanal(); renderMensal(); renderHistorico(); }
+function renderAll(){ renderGoalCards(); renderStats(); renderLancar(); renderDiario(); renderSemanal(); renderMensal(); renderHistorico(); }
 
 function exportExcel(){
   const wb = XLSX.utils.book_new();
