@@ -90,30 +90,30 @@
   .del-btn:hover{border-color:var(--rose-dim);color:var(--rose);}
   .empty{color:var(--text-faint);font-size:13px;padding:20px 4px;text-align:center;}
 
-  .day-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:14px;}
-  .dc-header{font-family:'IBM Plex Mono';font-size:16px;font-weight:600;color:var(--text);margin-bottom:14px;}
-  .dc-grid{display:grid;grid-template-columns:minmax(160px,220px) 1fr;gap:20px;align-items:stretch;}
+  .day-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;}
+  .dc-header{font-family:'IBM Plex Mono';font-size:14px;font-weight:600;color:var(--text);margin-bottom:8px;}
+  .dc-grid{display:grid;grid-template-columns:1fr 420px;gap:14px;align-items:stretch;}
 
-  .orc-card{background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;justify-content:center;gap:4px;}
-  .orc-card .lbl{font-size:10.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;font-weight:500;}
-  .orc-card .val{font-family:'IBM Plex Mono';font-size:25px;font-weight:700;color:var(--amber);}
+  .orc-card{background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:10px 16px;display:flex;flex-direction:column;justify-content:center;gap:2px;}
+  .orc-card .lbl{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;font-weight:500;}
+  .orc-card .val{font-family:'IBM Plex Mono';font-size:22px;font-weight:700;color:var(--amber);}
 
-  .tas-col{display:flex;flex-direction:column;gap:14px;}
-  .tas-cards{display:flex;gap:12px;}
-  .valid-card{flex:1.4;background:rgba(75,184,148,.12);border:1px solid var(--teal-dim);border-radius:10px;padding:14px 20px;text-align:center;display:flex;flex-direction:column;justify-content:center;}
-  .valid-card .num{font-family:'IBM Plex Mono';font-size:32px;font-weight:700;color:var(--teal);line-height:1;}
-  .valid-card .lbl{font-size:11px;color:var(--text-dim);margin-top:4px;text-transform:uppercase;letter-spacing:.04em;}
-  .total-card{flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;text-align:center;display:flex;flex-direction:column;justify-content:center;}
-  .total-card .num{font-family:'IBM Plex Mono';font-size:19px;font-weight:600;color:var(--text-dim);line-height:1;}
-  .total-card .lbl{font-size:10px;color:var(--text-faint);margin-top:4px;text-transform:uppercase;letter-spacing:.04em;}
-  .total-card .sub{font-size:10.5px;color:var(--rose);margin-top:4px;}
+  .tas-col{display:flex;flex-direction:column;gap:8px;}
+  .tas-cards{display:flex;gap:8px;}
+  .valid-card{flex:1.4;background:rgba(75,184,148,.12);border:1px solid var(--teal-dim);border-radius:8px;padding:8px 14px;text-align:center;display:flex;flex-direction:column;justify-content:center;}
+  .valid-card .num{font-family:'IBM Plex Mono';font-size:22px;font-weight:700;color:var(--teal);line-height:1;}
+  .valid-card .lbl{font-size:10px;color:var(--text-dim);margin-top:2px;text-transform:uppercase;letter-spacing:.04em;}
+  .total-card{flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;text-align:center;display:flex;flex-direction:column;justify-content:center;}
+  .total-card .num{font-family:'IBM Plex Mono';font-size:15px;font-weight:600;color:var(--text-dim);line-height:1;}
+  .total-card .lbl{font-size:9px;color:var(--text-faint);margin-top:2px;text-transform:uppercase;letter-spacing:.04em;}
+  .total-card .sub{font-size:9.5px;color:var(--rose);margin-top:2px;}
 
-  .dc-users{display:flex;flex-wrap:wrap;gap:10px;padding-top:14px;border-top:1px dashed var(--border-soft);}
-  .user-chip{background:var(--surface-2);border-radius:8px;padding:10px 16px;min-width:120px;text-align:center;}
-  .user-chip .uc-name{font-size:12.5px;font-weight:600;color:var(--text);margin-bottom:8px;white-space:nowrap;}
-  .user-chip .uc-nums{display:flex;gap:16px;justify-content:center;}
-  .uc-stat .uc-lbl{font-size:9.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;}
-  .uc-stat .uc-val{font-family:'IBM Plex Mono';font-size:16px;font-weight:600;color:var(--text);margin-top:3px;}
+  .dc-users{display:flex;flex-wrap:wrap;gap:8px;padding-top:8px;border-top:1px dashed var(--border-soft);}
+  .user-chip{background:var(--surface-2);border-radius:7px;padding:6px 12px;min-width:100px;text-align:center;}
+  .user-chip .uc-name{font-size:11.5px;font-weight:600;color:var(--text);margin-bottom:4px;white-space:nowrap;}
+  .user-chip .uc-nums{display:flex;gap:12px;justify-content:center;}
+  .uc-stat .uc-lbl{font-size:9px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;}
+  .uc-stat .uc-val{font-family:'IBM Plex Mono';font-size:14px;font-weight:600;color:var(--text);margin-top:2px;}
   .uc-stat.valid .uc-val{color:var(--teal);}
 
   .filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
@@ -146,7 +146,7 @@
   <details class="cfg-panel" id="cfg-panel">
     <summary>Conectar ao Google Sheets</summary>
     <div class="cfg-inner">
-      <p class="hint">Cole aqui a URL de implantação (Web App) do Google Apps Script. Veja o arquivo de instruções que acompanha este sistema para configurar a planilha em poucos minutos.</p>
+      <p class="hint">O sistema já vem conectado à planilha padrão. Só mexa aqui se quiser apontar para outra planilha — cole a URL de implantação (Web App) do Google Apps Script correspondente.</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <input type="text" id="cfg-url" placeholder="https://script.google.com/macros/s/SEU_ID/exec" style="flex:1;min-width:280px;">
         <button class="primary" onclick="saveConfig()">Salvar</button>
@@ -261,8 +261,9 @@
 </div>
 
 <script>
+const DEFAULT_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwUPiM0CxhMccg4-Mlw0onWGvWfh_BPFkvSBuCFccxPGZTV0PLDEd6b1iM8VYptX3jJ/exec';
 let records = [];
-let config = {sheetsUrl:''};
+let config = {sheetsUrl: DEFAULT_SHEETS_URL};
 let selectedDate = todayStr();
 let pendingImport = null;
 
@@ -288,8 +289,9 @@ async function saveData(){
 async function loadConfig(){
   try{
     const raw = localStorage.getItem('config');
-    config = raw ? JSON.parse(raw) : {sheetsUrl:''};
-  }catch(e){ config = {sheetsUrl:''}; }
+    config = raw ? JSON.parse(raw) : {sheetsUrl: DEFAULT_SHEETS_URL};
+    if(!config.sheetsUrl) config.sheetsUrl = DEFAULT_SHEETS_URL;
+  }catch(e){ config = {sheetsUrl: DEFAULT_SHEETS_URL}; }
   document.getElementById('cfg-url').value = config.sheetsUrl || '';
   if(config.sheetsUrl) document.getElementById('cfg-panel').open = false;
   updateSyncStatus();
