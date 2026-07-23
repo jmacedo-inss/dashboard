@@ -213,6 +213,7 @@
     <div class="panel">
       <div class="head-row">
         <h2>Importar TAs</h2>
+        <button class="ghost" onclick="repairSwappedDates()" title="Use apenas se você importou TAs antes desta correção">🛠 Corrigir datas invertidas (uso único)</button>
       </div>
 
       <div class="upload-box">
@@ -484,7 +485,7 @@ function parseDateCell_(val){
   }
   const s = String(val).trim();
   let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if(m) return m[3]+'-'+m[1].padStart(2,'0')+'-'+m[2].padStart(2,'0');
+  if(m) return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');
   m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
   if(m) return m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0');
   return null;
@@ -579,6 +580,26 @@ function hideImportProgress(){
 function cancelImport(){
   pendingImport = null;
   document.getElementById('upload-preview').style.display = 'none';
+}
+
+async function repairSwappedDates(){
+  const ticketCount = records.filter(r=>r.tipo==='ticket').length;
+  if(ticketCount===0){ alert('Não há TAs para corrigir.'); return; }
+  const ok = confirm('Isso corrige a inversão dia/mês em TODOS os '+ticketCount+' TA(s) já importados (bug de uma versão anterior). Use isso apenas UMA VEZ — rodar de novo depois de já corrigido vai inverter tudo errado de novo. Deseja continuar?');
+  if(!ok) return;
+  let fixed = 0;
+  records.forEach(r=>{
+    if(r.tipo!=='ticket') return;
+    const d = normalizeDateStr_(r.data);
+    const m = d.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if(m){
+      r.data = m[1]+'-'+m[3]+'-'+m[2];
+      fixed++;
+    }
+  });
+  await persistAndSync();
+  renderAll();
+  alert('Datas corrigidas em '+fixed+' TA(s). Confira se os cards de meta agora batem certo.');
 }
 
 function usuariosUnicos(){ return [...new Set(records.map(r => r.usuario).filter(u=>u!=='Geral'))].sort((a,b)=>a.localeCompare(b,'pt-BR')); }
