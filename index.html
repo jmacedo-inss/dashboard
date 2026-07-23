@@ -90,28 +90,29 @@
   .del-btn:hover{border-color:var(--rose-dim);color:var(--rose);}
   .empty{color:var(--text-faint);font-size:13px;padding:20px 4px;text-align:center;}
 
-  .breakdown{font-size:12.5px;color:var(--text-dim);}
-  .breakdown .orcline{display:flex;justify-content:space-between;padding:4px 0 8px;color:var(--amber);font-family:'IBM Plex Mono';font-weight:600;}
-  .breakdown .u{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dotted var(--border-soft);}
-  .breakdown .u:last-child{border-bottom:none;}
-  .breakdown .u .name{color:var(--text);}
-  .breakdown .u .nums{font-family:'IBM Plex Mono';color:var(--text-dim);}
-
-  details.day-row{border-bottom:1px solid var(--border-soft);}
-  details.day-row summary{cursor:pointer;list-style:none;padding:11px 10px;display:grid;grid-template-columns:120px 1fr 90px 90px 90px;gap:10px;align-items:center;font-size:13.5px;}
-  details.day-row summary::-webkit-details-marker{display:none;}
-  details.day-row summary:hover{background:var(--surface-2);}
-  details.day-row .expand{padding:0 10px 16px 130px;}
-  .row-date{font-family:'IBM Plex Mono';color:var(--text);}
-  .row-num{font-family:'IBM Plex Mono';text-align:right;}
+  .day-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:14px;}
+  .dc-top{display:flex;align-items:center;gap:28px;flex-wrap:wrap;}
+  .dc-date{font-family:'IBM Plex Mono';font-size:17px;font-weight:600;color:var(--text);min-width:96px;}
+  .dc-orc .lbl{display:block;font-size:10.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;font-weight:500;margin-bottom:3px;}
+  .dc-orc .amt{font-family:'IBM Plex Mono';font-size:16px;color:var(--amber);font-weight:600;}
+  .dc-valid{margin-left:auto;background:rgba(75,184,148,.12);border:1px solid var(--teal-dim);border-radius:10px;padding:8px 20px;text-align:center;}
+  .dc-valid .num{font-family:'IBM Plex Mono';font-size:28px;font-weight:700;color:var(--teal);line-height:1.1;}
+  .dc-valid .lbl{font-size:11px;color:var(--text-dim);margin-top:3px;}
+  .dc-valid .lbl .sub{color:var(--text-faint);}
+  .dc-users{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;padding-top:16px;border-top:1px dashed var(--border-soft);}
+  .user-chip{background:var(--surface-2);border-radius:8px;padding:10px 16px;min-width:120px;text-align:center;}
+  .user-chip .uc-name{font-size:12.5px;font-weight:600;color:var(--text);margin-bottom:8px;white-space:nowrap;}
+  .user-chip .uc-nums{display:flex;gap:16px;justify-content:center;}
+  .uc-stat .uc-lbl{font-size:9.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;}
+  .uc-stat .uc-val{font-family:'IBM Plex Mono';font-size:16px;font-weight:600;color:var(--text);margin-top:3px;}
+  .uc-stat.valid .uc-val{color:var(--teal);}
 
   .filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
   .filters select,.filters input{width:auto;}
 
   ::placeholder{color:var(--text-faint);}
   @media(max-width:720px){
-    details.day-row summary{grid-template-columns:90px 1fr 60px;}
-    details.day-row summary .hide-mobile{display:none;}
+    .dc-valid{margin-left:0;width:100%;}
   }
 </style>
 </head>
@@ -540,36 +541,34 @@ function renderLancar(){
   document.getElementById('f-orc-valor').value = orcRec ? orcRec.valor : '';
   document.getElementById('orc-atual').textContent = orcRec ? '— atual em '+fmtDateBR(selectedDate)+': '+fmtBRL(orcRec.valor) : '— nada lançado para '+fmtDateBR(selectedDate);
 }
-function breakdownHtml(s){
-  const rows = Object.entries(s.byUser).sort((a,b)=>b[1].ta-a[1].ta || a[0].localeCompare(b[0],'pt-BR'));
-  let html = '<div class="breakdown">';
-  html += `<div class="orcline"><span>Orçamento</span><span>${fmtBRL(s.orcTotal)}</span></div>`;
-  html += `<div class="orcline" style="color:var(--teal)"><span>Total de tickets</span><span>${s.ticketsTotal} (${s.taCount} válidos${s.osCount>0?', '+s.osCount+' p/ OS':''})</span></div>`;
-  if(rows.length===0){ html += '<div class="empty">Sem TAs lançados.</div>'; }
-  else{
-    html += rows.map(([name,d])=>`
-      <div class="u"><span class="name">${name}</span><span class="nums">${d.ta} válidos${d.os>0?' <span style="color:var(--text-faint)">(total '+(d.ta+d.os)+')</span>':''}</span></div>
-    `).join('');
-  }
-  return html+'</div>';
-}
 function renderPeriodTable(elId, groups, labelFn){
   const keys = Object.keys(groups).sort().reverse();
   const el = document.getElementById(elId);
   if(keys.length===0){ el.innerHTML = '<div class="empty">Nenhum lançamento ainda.</div>'; return; }
   el.innerHTML = keys.map(k=>{
     const s = daySummary(groups[k]);
+    const rows = Object.entries(s.byUser).sort((a,b)=>b[1].ta-a[1].ta || a[0].localeCompare(b[0],'pt-BR'));
+    const usersHtml = rows.length>0 ? rows.map(([name,d])=>`
+      <div class="user-chip">
+        <div class="uc-name">${name}</div>
+        <div class="uc-nums">
+          <div class="uc-stat"><div class="uc-lbl">Totais</div><div class="uc-val">${d.ta+d.os}</div></div>
+          <div class="uc-stat valid"><div class="uc-lbl">Válidos</div><div class="uc-val">${d.ta}</div></div>
+        </div>
+      </div>
+    `).join('') : '<div class="empty" style="padding:2px 0;">Sem TAs lançados.</div>';
     return `
-      <details class="day-row">
-        <summary>
-          <span class="row-date">${labelFn(k)}</span>
-          <span class="hide-mobile" style="color:var(--text-faint)">${Object.keys(s.byUser).length} usuário(s)</span>
-          <span class="row-num" style="color:var(--amber)">${fmtBRL(s.orcTotal)}</span>
-          <span class="row-num" style="color:var(--teal);font-weight:600;">${s.taCount} válidos</span>
-          <span class="row-num" style="color:var(--text-faint);font-size:12px;">${s.ticketsTotal} totais</span>
-        </summary>
-        <div class="expand">${breakdownHtml(s)}</div>
-      </details>`;
+      <div class="day-card">
+        <div class="dc-top">
+          <div class="dc-date">${labelFn(k)}</div>
+          <div class="dc-orc"><span class="lbl">Orçamento</span><span class="amt">${fmtBRL(s.orcTotal)}</span></div>
+          <div class="dc-valid">
+            <div class="num">${s.taCount}</div>
+            <div class="lbl">válidos <span class="sub">/ ${s.ticketsTotal} totais${s.osCount>0?', '+s.osCount+' p/ OS':''}</span></div>
+          </div>
+        </div>
+        <div class="dc-users">${usersHtml}</div>
+      </div>`;
   }).join('');
 }
 function renderDiario(){ renderPeriodTable('diario-body', groupBy(records,r=>r.data), fmtDateBR); }
