@@ -90,16 +90,25 @@
   .del-btn:hover{border-color:var(--rose-dim);color:var(--rose);}
   .empty{color:var(--text-faint);font-size:13px;padding:20px 4px;text-align:center;}
 
-  .day-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:14px;}
-  .dc-top{display:flex;align-items:center;gap:28px;flex-wrap:wrap;}
-  .dc-date{font-family:'IBM Plex Mono';font-size:17px;font-weight:600;color:var(--text);min-width:96px;}
-  .dc-orc .lbl{display:block;font-size:10.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;font-weight:500;margin-bottom:3px;}
-  .dc-orc .amt{font-family:'IBM Plex Mono';font-size:16px;color:var(--amber);font-weight:600;}
-  .dc-valid{margin-left:auto;background:rgba(75,184,148,.12);border:1px solid var(--teal-dim);border-radius:10px;padding:8px 20px;text-align:center;}
-  .dc-valid .num{font-family:'IBM Plex Mono';font-size:28px;font-weight:700;color:var(--teal);line-height:1.1;}
-  .dc-valid .lbl{font-size:11px;color:var(--text-dim);margin-top:3px;}
-  .dc-valid .lbl .sub{color:var(--text-faint);}
-  .dc-users{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;padding-top:16px;border-top:1px dashed var(--border-soft);}
+  .day-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:14px;}
+  .dc-header{font-family:'IBM Plex Mono';font-size:16px;font-weight:600;color:var(--text);margin-bottom:14px;}
+  .dc-grid{display:grid;grid-template-columns:minmax(160px,220px) 1fr;gap:20px;align-items:stretch;}
+
+  .orc-card{background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;justify-content:center;gap:4px;}
+  .orc-card .lbl{font-size:10.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;font-weight:500;}
+  .orc-card .val{font-family:'IBM Plex Mono';font-size:25px;font-weight:700;color:var(--amber);}
+
+  .tas-col{display:flex;flex-direction:column;gap:14px;}
+  .tas-cards{display:flex;gap:12px;}
+  .valid-card{flex:1.4;background:rgba(75,184,148,.12);border:1px solid var(--teal-dim);border-radius:10px;padding:14px 20px;text-align:center;display:flex;flex-direction:column;justify-content:center;}
+  .valid-card .num{font-family:'IBM Plex Mono';font-size:32px;font-weight:700;color:var(--teal);line-height:1;}
+  .valid-card .lbl{font-size:11px;color:var(--text-dim);margin-top:4px;text-transform:uppercase;letter-spacing:.04em;}
+  .total-card{flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;text-align:center;display:flex;flex-direction:column;justify-content:center;}
+  .total-card .num{font-family:'IBM Plex Mono';font-size:19px;font-weight:600;color:var(--text-dim);line-height:1;}
+  .total-card .lbl{font-size:10px;color:var(--text-faint);margin-top:4px;text-transform:uppercase;letter-spacing:.04em;}
+  .total-card .sub{font-size:10.5px;color:var(--rose);margin-top:4px;}
+
+  .dc-users{display:flex;flex-wrap:wrap;gap:10px;padding-top:14px;border-top:1px dashed var(--border-soft);}
   .user-chip{background:var(--surface-2);border-radius:8px;padding:10px 16px;min-width:120px;text-align:center;}
   .user-chip .uc-name{font-size:12.5px;font-weight:600;color:var(--text);margin-bottom:8px;white-space:nowrap;}
   .user-chip .uc-nums{display:flex;gap:16px;justify-content:center;}
@@ -112,7 +121,8 @@
 
   ::placeholder{color:var(--text-faint);}
   @media(max-width:720px){
-    .dc-valid{margin-left:0;width:100%;}
+    .dc-grid{grid-template-columns:1fr;}
+    .tas-cards{flex-direction:column;}
   }
 </style>
 </head>
@@ -559,15 +569,27 @@ function renderPeriodTable(elId, groups, labelFn){
     `).join('') : '<div class="empty" style="padding:2px 0;">Sem TAs lançados.</div>';
     return `
       <div class="day-card">
-        <div class="dc-top">
-          <div class="dc-date">${labelFn(k)}</div>
-          <div class="dc-orc"><span class="lbl">Orçamento</span><span class="amt">${fmtBRL(s.orcTotal)}</span></div>
-          <div class="dc-valid">
-            <div class="num">${s.taCount}</div>
-            <div class="lbl">válidos <span class="sub">/ ${s.ticketsTotal} totais${s.osCount>0?', '+s.osCount+' p/ OS':''}</span></div>
+        <div class="dc-header">${labelFn(k)}</div>
+        <div class="dc-grid">
+          <div class="orc-card">
+            <div class="lbl">Orçamento</div>
+            <div class="val">${fmtBRL(s.orcTotal)}</div>
+          </div>
+          <div class="tas-col">
+            <div class="tas-cards">
+              <div class="valid-card">
+                <div class="num">${s.taCount}</div>
+                <div class="lbl">TAs válidos</div>
+              </div>
+              <div class="total-card">
+                <div class="num">${s.ticketsTotal}</div>
+                <div class="lbl">totais</div>
+                ${s.osCount>0?`<div class="sub">${s.osCount} p/ OS</div>`:''}
+              </div>
+            </div>
+            <div class="dc-users">${usersHtml}</div>
           </div>
         </div>
-        <div class="dc-users">${usersHtml}</div>
       </div>`;
   }).join('');
 }
