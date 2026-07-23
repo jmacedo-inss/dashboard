@@ -619,24 +619,29 @@ function groupBy(arr, keyFn){
 
 const GOALS = { orcamento: 40000, validos: 600, validosPorConsultor: 200 };
 
-function currentMonthRecords(){
-  const mk = monthKey(todayStr());
-  return records.filter(r=>monthKey(r.data)===mk);
+function referenceDate_(){
+  const ticketDates = records.filter(r=>r.tipo==='ticket').map(r=>r.data);
+  const allDates = ticketDates.length>0 ? ticketDates : records.map(r=>r.data);
+  if(allDates.length===0) return new Date();
+  const maxStr = allDates.reduce((max,d)=> d>max?d:max, allDates[0]);
+  return new Date(maxStr+'T00:00:00');
 }
-function monthProgress(currentValue, goal){
-  const now = new Date();
-  const daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
-  const daysElapsed = now.getDate();
+function monthProgress(currentValue, goal, daysElapsed, daysInMonth){
   const pct = goal>0 ? (currentValue/goal*100) : 0;
   const projection = daysElapsed>0 ? (currentValue/daysElapsed)*daysInMonth : 0;
   return {pct, projection};
 }
 function renderGoalCards(){
-  const s = daySummary(currentMonthRecords());
-  const mesLabel = monthLabel(monthKey(todayStr()));
+  const refDate = referenceDate_();
+  const mk = refDate.getFullYear()+'-'+String(refDate.getMonth()+1).padStart(2,'0');
+  const daysInMonth = new Date(refDate.getFullYear(), refDate.getMonth()+1, 0).getDate();
+  const daysElapsed = refDate.getDate();
+  const monthRecs = records.filter(r=>monthKey(r.data)===mk);
+  const s = daySummary(monthRecs);
+  const mesLabel = monthLabel(mk);
 
-  const orc = monthProgress(s.orcTotal, GOALS.orcamento);
-  const val = monthProgress(s.taCount, GOALS.validos);
+  const orc = monthProgress(s.orcTotal, GOALS.orcamento, daysElapsed, daysInMonth);
+  const val = monthProgress(s.taCount, GOALS.validos, daysElapsed, daysInMonth);
 
   document.getElementById('goal-cards').innerHTML = `
     <div class="goal-card">
