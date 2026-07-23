@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Livro de Bordo — Orçamentos & Tickets</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --bg:#10141b; --surface:#171d27; --surface-2:#1e2532; --surface-3:#242c3b;
+    --border:#2a3242; --border-soft:#1f2530; --text:#eef1f6; --text-dim:#9aa4b7; --text-faint:#5c6577;
+    --amber:#dba24c; --amber-dim:#8a6a35; --teal:#4bb894; --teal-dim:#2f6e56; --rose:#dd8484; --rose-dim:#8a4f4f;
+    --radius:8px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 20px 80px;}
+  .hint{font-size:12px;color:var(--text-faint);margin:6px 0 0;}
+
+  header.top{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;border-bottom:1px solid var(--border);padding-bottom:20px;margin-bottom:16px;}
+  header.top .id{display:flex;align-items:center;gap:12px;}
+  header.top .mark{width:38px;height:38px;border-radius:6px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk';font-weight:700;color:var(--amber);font-size:15px;}
+  header.top h1{font-family:'Space Grotesk';font-weight:600;font-size:20px;margin:0;letter-spacing:-0.01em;}
+  header.top p{margin:2px 0 0;color:var(--text-dim);font-size:12.5px;}
+  header.top .right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;}
+  #export-btn{background:var(--surface-2);border:1px solid var(--border);color:var(--text);font-family:'Inter';font-size:13px;font-weight:500;padding:9px 14px;border-radius:var(--radius);cursor:pointer;}
+  #export-btn:hover{border-color:var(--amber-dim);color:var(--amber);}
+  #sync-status{font-size:11.5px;font-family:'IBM Plex Mono';}
+
+  details.cfg-panel{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:24px;}
+  details.cfg-panel summary{cursor:pointer;padding:11px 16px;font-size:13px;font-weight:500;color:var(--text-dim);list-style:none;}
+  details.cfg-panel summary::-webkit-details-marker{display:none;}
+  details.cfg-panel summary:before{content:"▸ ";color:var(--text-faint);}
+  details.cfg-panel[open] summary:before{content:"▾ ";}
+  details.cfg-panel .cfg-inner{padding:0 16px 16px;}
+
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:28px;}
+  .stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;}
+  .stat .lbl{font-size:11.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;}
+  .stat .val{font-family:'IBM Plex Mono';font-size:22px;font-weight:600;margin-top:4px;}
+  .stat.amber .val{color:var(--amber);}
+  .stat.teal .val{color:var(--teal);}
+  .stat.rose .val{color:var(--rose);}
+
+  nav.tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:24px;flex-wrap:wrap;}
+  nav.tabs button{background:none;border:none;color:var(--text-dim);font-family:'Inter';font-size:13.5px;font-weight:500;padding:10px 14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;}
+  nav.tabs button:hover{color:var(--text);}
+  nav.tabs button.active{color:var(--amber);border-bottom-color:var(--amber);}
+
+  section.view{display:none;}
+  section.view.active{display:block;}
+
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px;}
+  .panel h2{font-family:'Space Grotesk';font-weight:600;font-size:15px;margin:0 0 4px;color:var(--text);}
+  .panel h2 span{color:var(--text-faint);font-weight:500;font-size:13px;}
+  .panel .head-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+
+  .field{display:flex;flex-direction:column;gap:5px;}
+  label{font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.04em;}
+  input,select{background:var(--surface-2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:8px 10px;font-family:'Inter';font-size:13.5px;height:36px;}
+  input:focus,select:focus{outline:none;border-color:var(--amber-dim);}
+  input.mono,select.mono{font-family:'IBM Plex Mono';}
+  button.primary{background:var(--amber);color:#1a1206;border:none;border-radius:6px;height:36px;padding:0 16px;font-family:'Inter';font-weight:600;font-size:13.5px;cursor:pointer;}
+  button.primary:hover{background:#e7ac57;}
+  button.ghost{background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:6px;height:36px;padding:0 14px;font-family:'Inter';font-weight:500;font-size:13.5px;cursor:pointer;}
+  button.ghost:hover{border-color:var(--amber-dim);color:var(--amber);}
+
+  #date-select-row{display:flex;gap:14px;align-items:flex-end;margin-bottom:20px;}
+
+  #orc-form{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;}
+
+  .upload-box{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px;border:1px dashed var(--border);border-radius:8px;background:var(--surface-2);}
+  .upload-box input[type=file]{height:auto;padding:6px;font-size:12.5px;}
+  .upload-box span{color:var(--text-faint);font-size:12.5px;}
+
+  #upload-preview{margin-top:16px;border-top:1px solid var(--border-soft);padding-top:16px;}
+  .map-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px;}
+  #manual-ta-form{display:flex;gap:10px;align-items:flex-end;margin-top:14px;flex-wrap:wrap;}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  th{text-align:left;color:var(--text-faint);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.04em;padding:8px 10px;border-bottom:1px solid var(--border);}
+  td{padding:9px 10px;border-bottom:1px solid var(--border-soft);vertical-align:top;}
+  tr:last-child td{border-bottom:none;}
+  td.num,th.num{text-align:right;font-family:'IBM Plex Mono';}
+  .tag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:11px;font-family:'IBM Plex Mono';font-weight:500;}
+  .tag.orc{background:rgba(219,162,76,.15);color:var(--amber);}
+  .tag.ta{background:rgba(75,184,148,.15);color:var(--teal);}
+  .tag.os{background:rgba(221,132,132,.15);color:var(--rose);}
+  .del-btn{background:none;border:1px solid var(--border);color:var(--text-faint);border-radius:5px;width:26px;height:26px;cursor:pointer;font-size:14px;line-height:1;}
+  .del-btn:hover{border-color:var(--rose-dim);color:var(--rose);}
+  .empty{color:var(--text-faint);font-size:13px;padding:20px 4px;text-align:center;}
+
+  .breakdown{font-size:12.5px;color:var(--text-dim);}
+  .breakdown .orcline{display:flex;justify-content:space-between;padding:4px 0 8px;color:var(--amber);font-family:'IBM Plex Mono';font-weight:600;}
+  .breakdown .u{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dotted var(--border-soft);}
+  .breakdown .u:last-child{border-bottom:none;}
+  .breakdown .u .name{color:var(--text);}
+  .breakdown .u .nums{font-family:'IBM Plex Mono';color:var(--text-dim);}
+
+  details.day-row{border-bottom:1px solid var(--border-soft);}
+  details.day-row summary{cursor:pointer;list-style:none;padding:11px 10px;display:grid;grid-template-columns:120px 1fr 90px 90px 90px;gap:10px;align-items:center;font-size:13.5px;}
+  details.day-row summary::-webkit-details-marker{display:none;}
+  details.day-row summary:hover{background:var(--surface-2);}
+  details.day-row .expand{padding:0 10px 16px 130px;}
+  .row-date{font-family:'IBM Plex Mono';color:var(--text);}
+  .row-num{font-family:'IBM Plex Mono';text-align:right;}
+
+  .filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+  .filters select,.filters input{width:auto;}
+
+  ::placeholder{color:var(--text-faint);}
+  @media(max-width:720px){
+    details.day-row summary{grid-template-columns:90px 1fr 60px;}
+    details.day-row summary .hide-mobile{display:none;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="id">
+      <div class="mark">₶</div>
+      <div>
+        <h1>Livro de bordo — orçamentos &amp; tickets</h1>
+        <p>Lançamentos diários, com resumo semanal, mensal e histórico completo</p>
+      </div>
+    </div>
+    <div class="right">
+      <button id="export-btn" onclick="exportExcel()">⇩ Exportar Excel</button>
+      <span id="sync-status"></span>
+    </div>
+  </header>
+
+  <details class="cfg-panel" id="cfg-panel">
+    <summary>Conectar ao Google Sheets</summary>
+    <div class="cfg-inner">
+      <p class="hint">Cole aqui a URL de implantação (Web App) do Google Apps Script. Veja o arquivo de instruções que acompanha este sistema para configurar a planilha em poucos minutos.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <input type="text" id="cfg-url" placeholder="https://script.google.com/macros/s/SEU_ID/exec" style="flex:1;min-width:280px;">
+        <button class="primary" onclick="saveConfig()">Salvar</button>
+        <button class="ghost" onclick="testConnection()">Testar conexão</button>
+      </div>
+      <p id="cfg-msg" class="hint"></p>
+    </div>
+  </details>
+
+  <div class="stats" id="stats"></div>
+
+  <nav class="tabs">
+    <button data-view="lancar" class="active">Lançar</button>
+    <button data-view="diario">Diário</button>
+    <button data-view="semanal">Semanal</button>
+    <button data-view="mensal">Mensal</button>
+    <button data-view="historico">Histórico completo</button>
+  </nav>
+
+  <section class="view active" id="view-lancar">
+
+    <div id="date-select-row">
+      <div class="field">
+        <label>Data de referência</label>
+        <input type="date" id="f-data" class="mono">
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Orçamento do dia <span id="orc-atual"></span></h2>
+      <div id="orc-form">
+        <div class="field">
+          <label>Valor total (R$)</label>
+          <input type="number" id="f-orc-valor" class="mono" step="0.01" min="0" placeholder="0,00">
+        </div>
+        <button class="primary" onclick="saveOrcamento()">Salvar orçamento</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="head-row">
+        <h2>TAs do dia</h2>
+      </div>
+
+      <div class="upload-box">
+        <label for="f-upload" style="margin:0;text-transform:none;font-size:13px;color:var(--text);cursor:pointer;">⇧ Importar planilha (.xlsx / .csv)</label>
+        <input type="file" id="f-upload" accept=".xlsx,.xls,.csv" onchange="handleUpload(event)">
+        <span>ou</span>
+        <button class="ghost" onclick="document.getElementById('manual-ta-form').classList.toggle('show')">+ adicionar manualmente</button>
+      </div>
+
+      <form id="manual-ta-form" style="display:none" onsubmit="addManualTicket(event)">
+        <div class="field">
+          <label>Usuário</label>
+          <input type="text" id="f-usuario" list="lista-usuarios" placeholder="Nome do atendente" required>
+          <datalist id="lista-usuarios"></datalist>
+        </div>
+        <div class="field">
+          <label>Tipo</label>
+          <select id="f-subtipo">
+            <option value="TA">Atendimento (TA)</option>
+            <option value="OS">Ordem de serviço (OS)</option>
+          </select>
+        </div>
+        <button type="submit" class="primary">+ Adicionar</button>
+      </form>
+
+      <div id="upload-preview" style="display:none">
+        <p class="hint">Planilha lida: <span id="preview-count"></span> linha(s). Indique quais colunas usar:</p>
+        <div class="map-row">
+          <div class="field">
+            <label>Coluna do usuário</label>
+            <select id="map-usuario" onchange="renderImportPreviewTable()"></select>
+          </div>
+          <div class="field">
+            <label>Coluna do tipo (opcional)</label>
+            <select id="map-tipo" onchange="renderImportPreviewTable()"></select>
+          </div>
+          <div class="field">
+            <label>Texto que indica OS</label>
+            <input type="text" id="map-os-keyword" class="mono" value="ordem" oninput="renderImportPreviewTable()">
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>Usuário</th><th>Tipo detectado</th></tr></thead>
+          <tbody id="preview-body"></tbody>
+        </table>
+        <div style="display:flex;gap:10px;margin-top:14px;">
+          <button class="primary" onclick="confirmImport()">Confirmar importação</button>
+          <button class="ghost" onclick="cancelImport()">Cancelar</button>
+        </div>
+      </div>
+
+      <table style="margin-top:18px;">
+        <thead><tr><th>Usuário</th><th>Tipo</th><th></th></tr></thead>
+        <tbody id="today-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="view" id="view-diario">
+    <div class="panel"><h2>Resumo por dia</h2><div id="diario-body"></div></div>
+  </section>
+
+  <section class="view" id="view-semanal">
+    <div class="panel"><h2>Resumo por semana <span>(segunda a domingo)</span></h2><div id="semanal-body"></div></div>
+  </section>
+
+  <section class="view" id="view-mensal">
+    <div class="panel"><h2>Resumo por mês</h2><div id="mensal-body"></div></div>
+  </section>
+
+  <section class="view" id="view-historico">
+    <div class="panel">
+      <h2>Histórico completo</h2>
+      <div class="filters">
+        <select id="hist-usuario"><option value="">Todos os usuários</option></select>
+        <select id="hist-tipo">
+          <option value="">Todos os tipos</option>
+          <option value="orcamento">Orçamento</option>
+          <option value="ticket">Ticket</option>
+        </select>
+        <input type="date" id="hist-de" class="mono">
+        <input type="date" id="hist-ate" class="mono">
+      </div>
+      <table>
+        <thead><tr><th>Data</th><th>Usuário</th><th>Tipo</th><th class="num">Valor</th><th></th></tr></thead>
+        <tbody id="hist-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+</div>
+
+<style>#manual-ta-form.show{display:flex !important;}</style>
+
+<script>
+let records = [];
+let config = {sheetsUrl:''};
+let selectedDate = todayStr();
+let pendingImport = null;
+
+function todayStr(){
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function fmtBRL(v){ return (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
+function fmtDateBR(iso){ const [y,m,d] = iso.split('-'); return d+'/'+m+'/'+y; }
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+
+async function loadData(){
+  try{
+    const res = await window.storage.get('lancamentos', false);
+    records = res && res.value ? JSON.parse(res.value) : [];
+  }catch(e){ records = []; }
+}
+async function saveData(){
+  try{ await window.storage.set('lancamentos', JSON.stringify(records), false); }
+  catch(e){ console.error('Falha ao salvar localmente', e); }
+}
+
+async function loadConfig(){
+  try{
+    const res = await window.storage.get('config', false);
+    config = res && res.value ? JSON.parse(res.value) : {sheetsUrl:''};
+  }catch(e){ config = {sheetsUrl:''}; }
+  document.getElementById('cfg-url').value = config.sheetsUrl || '';
+  if(config.sheetsUrl) document.getElementById('cfg-panel').open = false;
+  updateSyncStatus();
+}
+async function saveConfig(){
+  config.sheetsUrl = document.getElementById('cfg-url').value.trim();
+  try{ await window.storage.set('config', JSON.stringify(config), false); }catch(e){}
+  updateSyncStatus();
+  await testConnection();
+}
+function updateSyncStatus(){
+  const el = document.getElementById('sync-status');
+  if(config.sheetsUrl){ el.textContent = 'Sincronizado com Google Sheets'; el.style.color = 'var(--teal)'; }
+  else { el.textContent = 'Somente armazenamento local'; el.style.color = 'var(--text-faint)'; }
+}
+async function testConnection(){
+  const msg = document.getElementById('cfg-msg');
+  if(!config.sheetsUrl){ msg.textContent=''; return; }
+  msg.textContent = 'Testando...'; msg.style.color = 'var(--text-faint)';
+  try{
+    const res = await fetch(config.sheetsUrl);
+    if(!res.ok) throw new Error();
+    await res.json();
+    msg.textContent = 'Conectado com sucesso.'; msg.style.color = 'var(--teal)';
+  }catch(e){
+    msg.textContent = 'Não foi possível conectar. Confira a URL e se a implantação está com acesso "Qualquer pessoa".';
+    msg.style.color = 'var(--rose)';
+  }
+}
+async function syncToSheets(){
+  if(!config.sheetsUrl) return;
+  try{
+    await fetch(config.sheetsUrl, {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify(records)
+    });
+  }catch(e){ console.error('Falha ao sincronizar com Google Sheets', e); }
+}
+async function fetchFromSheets(){
+  if(!config.sheetsUrl) return false;
+  try{
+    const res = await fetch(config.sheetsUrl);
+    if(!res.ok) throw new Error();
+    const remote = await res.json();
+    if(!Array.isArray(remote)) return false;
+    records = remote.map(r=>({
+      id: String(r.id), data: String(r.data), tipo: r.tipo,
+      subtipo: r.subtipo || null, usuario: r.usuario, valor: parseFloat(r.valor)||0
+    }));
+    await saveData();
+    return true;
+  }catch(e){ console.error('Falha ao carregar do Google Sheets', e); return false; }
+}
+async function persistAndSync(){ await saveData(); await syncToSheets(); }
+
+async function saveOrcamento(){
+  const valor = parseFloat(document.getElementById('f-orc-valor').value) || 0;
+  records = records.filter(r => !(r.data===selectedDate && r.tipo==='orcamento'));
+  if(valor>0) records.push({id:uid(), data:selectedDate, tipo:'orcamento', subtipo:null, usuario:'Geral', valor});
+  await persistAndSync();
+  renderAll();
+}
+async function addManualTicket(ev){
+  ev.preventDefault();
+  const usuario = document.getElementById('f-usuario').value.trim();
+  const subtipo = document.getElementById('f-subtipo').value;
+  if(!usuario) return;
+  records.push({id:uid(), data:selectedDate, tipo:'ticket', subtipo, usuario, valor:0});
+  await persistAndSync();
+  document.getElementById('f-usuario').value = '';
+  renderAll();
+}
+async function deleteEntry(id){
+  records = records.filter(r => r.id !== id);
+  await persistAndSync();
+  renderAll();
+}
+
+function handleUpload(ev){
+  const file = ev.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try{
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, {type:'array'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+      if(rows.length < 2){ alert('A planilha parece vazia ou sem dados.'); return; }
+      const headers = rows[0].map(h=>String(h).trim());
+      const dataRows = rows.slice(1).filter(r=>r.some(c=>String(c).trim()!==''));
+      pendingImport = {headers, dataRows};
+      document.getElementById('preview-count').textContent = dataRows.length;
+      const userSel = document.getElementById('map-usuario');
+      const tipoSel = document.getElementById('map-tipo');
+      userSel.innerHTML = headers.map((h,i)=>`<option value="${i}">${h||('Coluna '+(i+1))}</option>`).join('');
+      tipoSel.innerHTML = '<option value="">(nenhuma — todas TA)</option>'+headers.map((h,i)=>`<option value="${i}">${h||('Coluna '+(i+1))}</option>`).join('');
+      document.getElementById('upload-preview').style.display = 'block';
+      renderImportPreviewTable();
+    }catch(err){
+      alert('Não consegui ler essa planilha. Confira se o arquivo é .xlsx, .xls ou .csv válido.');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  ev.target.value = '';
+}
+function classifySubtipo(row, tIdx, keyword){
+  if(tIdx===null || tIdx==='') return 'TA';
+  const val = String(row[parseInt(tIdx,10)]||'').toLowerCase();
+  const kw = (keyword||'ordem').toLowerCase();
+  return val.includes(kw) ? 'OS' : 'TA';
+}
+function renderImportPreviewTable(){
+  if(!pendingImport) return;
+  const uIdx = parseInt(document.getElementById('map-usuario').value,10);
+  const tIdxRaw = document.getElementById('map-tipo').value;
+  const keyword = document.getElementById('map-os-keyword').value;
+  const body = document.getElementById('preview-body');
+  const preview = pendingImport.dataRows.slice(0,6);
+  body.innerHTML = preview.map(row=>{
+    const usuario = String(row[uIdx]||'').trim() || '—';
+    const subtipo = classifySubtipo(row, tIdxRaw, keyword);
+    return `<tr><td>${usuario}</td><td>${subtipo==='OS'?'<span class="tag os">OS</span>':'<span class="tag ta">TA</span>'}</td></tr>`;
+  }).join('') + (pendingImport.dataRows.length>6 ? `<tr><td colspan="2" class="empty">+ ${pendingImport.dataRows.length-6} linha(s)...</td></tr>` : '');
+}
+async function confirmImport(){
+  if(!pendingImport) return;
+  const uIdx = parseInt(document.getElementById('map-usuario').value,10);
+  const tIdxRaw = document.getElementById('map-tipo').value;
+  const keyword = document.getElementById('map-os-keyword').value;
+  const existing = records.filter(r=>r.data===selectedDate && r.tipo==='ticket');
+  if(existing.length>0){
+    const replace = confirm('Já existem '+existing.length+' TA(s) lançados para '+fmtDateBR(selectedDate)+'. OK para substituir, Cancelar para somar aos existentes.');
+    if(replace) records = records.filter(r=>!(r.data===selectedDate && r.tipo==='ticket'));
+  }
+  let count = 0;
+  pendingImport.dataRows.forEach(row=>{
+    const usuario = String(row[uIdx]||'').trim();
+    if(!usuario) return;
+    const subtipo = classifySubtipo(row, tIdxRaw, keyword);
+    records.push({id:uid(), data:selectedDate, tipo:'ticket', subtipo, usuario, valor:0});
+    count++;
+  });
+  pendingImport = null;
+  document.getElementById('upload-preview').style.display = 'none';
+  await persistAndSync();
+  renderAll();
+  alert(count+' TA(s) importado(s) para '+fmtDateBR(selectedDate)+'.');
+}
+function cancelImport(){
+  pendingImport = null;
+  document.getElementById('upload-preview').style.display = 'none';
+}
+
+function usuariosUnicos(){ return [...new Set(records.map(r => r.usuario).filter(u=>u!=='Geral'))].sort((a,b)=>a.localeCompare(b,'pt-BR')); }
+
+function getMonday(dateStr){
+  const d = new Date(dateStr+'T00:00:00');
+  const day = d.getDay();
+  const diff = (day===0? -6 : 1) - day;
+  d.setDate(d.getDate()+diff);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function addDays(dateStr,n){
+  const d = new Date(dateStr+'T00:00:00'); d.setDate(d.getDate()+n);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function monthKey(dateStr){ return dateStr.slice(0,7); }
+function monthLabel(key){
+  const [y,m] = key.split('-');
+  const nomes = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  return nomes[parseInt(m,10)-1]+' de '+y;
+}
+function daySummary(dayRecords){
+  const orcTotal = dayRecords.filter(r=>r.tipo==='orcamento').reduce((s,r)=>s+r.valor,0);
+  const tickets = dayRecords.filter(r=>r.tipo==='ticket');
+  const osCount = tickets.filter(r=>r.subtipo==='OS').length;
+  const taCount = tickets.length - osCount;
+  const byUser = {};
+  tickets.forEach(r=>{
+    if(!byUser[r.usuario]) byUser[r.usuario] = {ta:0, os:0};
+    if(r.subtipo==='OS') byUser[r.usuario].os += 1; else byUser[r.usuario].ta += 1;
+  });
+  return {orcTotal, ticketsTotal: tickets.length, taCount, osCount, byUser};
+}
+function groupBy(arr, keyFn){
+  const g = {};
+  arr.forEach(r=>{ const k = keyFn(r); if(!g[k]) g[k] = []; g[k].push(r); });
+  return g;
+}
+
+function renderStats(){
+  const s = daySummary(records);
+  document.getElementById('stats').innerHTML = `
+    <div class="stat amber"><div class="lbl">Orçamento total</div><div class="val">${fmtBRL(s.orcTotal)}</div></div>
+    <div class="stat teal"><div class="lbl">Tickets totais</div><div class="val">${s.ticketsTotal}</div></div>
+    <div class="stat rose"><div class="lbl">Ordens de serviço</div><div class="val">${s.osCount}</div></div>
+    <div class="stat"><div class="lbl">Dias registrados</div><div class="val">${Object.keys(groupBy(records,r=>r.data)).length}</div></div>
+  `;
+}
+function renderLancar(){
+  const orcRec = records.find(r=>r.data===selectedDate && r.tipo==='orcamento');
+  document.getElementById('f-orc-valor').value = orcRec ? orcRec.valor : '';
+  document.getElementById('orc-atual').textContent = orcRec ? '— atual: '+fmtBRL(orcRec.valor) : '— nada lançado para '+fmtDateBR(selectedDate);
+
+  const dayTickets = records.filter(r=>r.data===selectedDate && r.tipo==='ticket').sort((a,b)=>a.usuario.localeCompare(b.usuario,'pt-BR'));
+  const body = document.getElementById('today-body');
+  if(dayTickets.length===0){
+    body.innerHTML = '<tr><td colspan="3" class="empty">Nenhum TA lançado para '+fmtDateBR(selectedDate)+' ainda.</td></tr>';
+  } else {
+    body.innerHTML = dayTickets.map(r=>`
+      <tr><td>${r.usuario}</td><td>${r.subtipo==='OS'?'<span class="tag os">OS</span>':'<span class="tag ta">TA</span>'}</td>
+      <td style="text-align:right"><button class="del-btn" onclick="deleteEntry('${r.id}')">×</button></td></tr>
+    `).join('');
+  }
+  document.getElementById('lista-usuarios').innerHTML = usuariosUnicos().map(u=>`<option value="${u}">`).join('');
+}
+function breakdownHtml(s){
+  const rows = Object.entries(s.byUser).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR'));
+  let html = '<div class="breakdown">';
+  html += `<div class="orcline"><span>Orçamento</span><span>${fmtBRL(s.orcTotal)}</span></div>`;
+  if(rows.length===0){ html += '<div class="empty">Sem TAs lançados.</div>'; }
+  else{
+    html += rows.map(([name,d])=>`
+      <div class="u"><span class="name">${name}</span><span class="nums">${d.ta+d.os} tickets${d.os>0?' ('+d.os+' OS)':''}</span></div>
+    `).join('');
+  }
+  return html+'</div>';
+}
+function renderPeriodTable(elId, groups, labelFn){
+  const keys = Object.keys(groups).sort().reverse();
+  const el = document.getElementById(elId);
+  if(keys.length===0){ el.innerHTML = '<div class="empty">Nenhum lançamento ainda.</div>'; return; }
+  el.innerHTML = keys.map(k=>{
+    const s = daySummary(groups[k]);
+    return `
+      <details class="day-row">
+        <summary>
+          <span class="row-date">${labelFn(k)}</span>
+          <span class="hide-mobile" style="color:var(--text-faint)">${Object.keys(s.byUser).length} usuário(s)</span>
+          <span class="row-num" style="color:var(--amber)">${fmtBRL(s.orcTotal)}</span>
+          <span class="row-num" style="color:var(--teal)">${s.ticketsTotal} tick.</span>
+          <span class="row-num" style="color:var(--rose)">${s.osCount} OS</span>
+        </summary>
+        <div class="expand">${breakdownHtml(s)}</div>
+      </details>`;
+  }).join('');
+}
+function renderDiario(){ renderPeriodTable('diario-body', groupBy(records,r=>r.data), fmtDateBR); }
+function renderSemanal(){
+  renderPeriodTable('semanal-body', groupBy(records,r=>getMonday(r.data)), (monday)=> fmtDateBR(monday)+' – '+fmtDateBR(addDays(monday,6)));
+}
+function renderMensal(){
+  renderPeriodTable('mensal-body', groupBy(records,r=>monthKey(r.data)), (mk)=> monthLabel(mk).replace(/^./, c=>c.toUpperCase()));
+}
+function renderHistorico(){
+  const selU = document.getElementById('hist-usuario');
+  const currentU = selU.value;
+  selU.innerHTML = '<option value="">Todos os usuários</option>'+usuariosUnicos().map(u=>`<option value="${u}">${u}</option>`).join('');
+  selU.value = currentU;
+  const fu = document.getElementById('hist-usuario').value;
+  const ft = document.getElementById('hist-tipo').value;
+  const fd = document.getElementById('hist-de').value;
+  const fa = document.getElementById('hist-ate').value;
+  let list = [...records];
+  if(fu) list = list.filter(r=>r.usuario===fu);
+  if(ft) list = list.filter(r=>r.tipo===ft);
+  if(fd) list = list.filter(r=>r.data>=fd);
+  if(fa) list = list.filter(r=>r.data<=fa);
+  list.sort((a,b)=> b.data.localeCompare(a.data) || a.usuario.localeCompare(b.usuario,'pt-BR'));
+  const body = document.getElementById('hist-body');
+  if(list.length===0){ body.innerHTML = '<tr><td colspan="5" class="empty">Nenhum lançamento encontrado para este filtro.</td></tr>'; return; }
+  body.innerHTML = list.map(r=>`
+    <tr>
+      <td class="mono">${fmtDateBR(r.data)}</td><td>${r.usuario}</td>
+      <td>${r.tipo==='orcamento' ? '<span class="tag orc">Orçamento</span>' : (r.subtipo==='OS' ? '<span class="tag os">OS</span>' : '<span class="tag ta">TA</span>')}</td>
+      <td class="num">${r.valor>0 ? fmtBRL(r.valor) : '—'}</td>
+      <td style="text-align:right"><button class="del-btn" onclick="deleteEntry('${r.id}')">×</button></td>
+    </tr>`).join('');
+}
+function renderAll(){ renderStats(); renderLancar(); renderDiario(); renderSemanal(); renderMensal(); renderHistorico(); }
+
+function exportExcel(){
+  const wb = XLSX.utils.book_new();
+  const lanc = records.slice().sort((a,b)=>a.data.localeCompare(b.data)).map(r=>({
+    Data: fmtDateBR(r.data), Usuario: r.usuario,
+    Tipo: r.tipo==='orcamento' ? 'Orçamento' : (r.subtipo==='OS' ? 'Ticket - OS' : 'Ticket - TA'),
+    Valor: r.valor
+  }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(lanc), 'Lancamentos');
+  function summaryRows(groups){
+    return Object.keys(groups).sort().reverse().map(k=>{
+      const s = daySummary(groups[k]);
+      return {Periodo:k, Orcamento:s.orcTotal, Tickets:s.ticketsTotal, TA:s.taCount, OS:s.osCount};
+    });
+  }
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summaryRows(groupBy(records,r=>r.data))), 'Resumo Diario');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summaryRows(groupBy(records,r=>getMonday(r.data)))), 'Resumo Semanal');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summaryRows(groupBy(records,r=>monthKey(r.data)))), 'Resumo Mensal');
+  XLSX.writeFile(wb, 'orcamentos-tickets.xlsx');
+}
+
+document.querySelectorAll('nav.tabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('section.view').forEach(s=>s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('view-'+btn.dataset.view).classList.add('active');
+  });
+});
+['hist-usuario','hist-tipo','hist-de','hist-ate'].forEach(id=>{
+  document.getElementById(id).addEventListener('change', renderHistorico);
+});
+document.getElementById('f-data').value = selectedDate;
+document.getElementById('f-data').addEventListener('change', ()=>{
+  selectedDate = document.getElementById('f-data').value;
+  renderLancar();
+});
+
+(async function init(){
+  await loadConfig();
+  const remoteOk = await fetchFromSheets();
+  if(!remoteOk) await loadData();
+  renderAll();
+})();
+</script>
+</body>
+</html>
