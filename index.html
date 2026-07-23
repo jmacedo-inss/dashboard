@@ -74,7 +74,7 @@
 
   .upload-box{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px;border:1px dashed var(--border);border-radius:8px;background:var(--surface-2);}
   .upload-box input[type=file]{height:auto;padding:6px;font-size:12.5px;}
-  .upload-box span{color:var(--text-faint);font-size:12.5px;}
+  .upload-box span{color:var(--text-faint);font-size:12px;max-width:260px;}
 
   #upload-preview{margin-top:16px;border-top:1px solid var(--border-soft);padding-top:16px;}
   .map-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px;}
@@ -162,7 +162,7 @@
 
     <div id="date-select-row">
       <div class="field">
-        <label>Data de referência</label>
+        <label>Data de referência <span style="text-transform:none;color:var(--text-faint);">(usada só no orçamento e nos TAs manuais)</span></label>
         <input type="date" id="f-data" class="mono">
       </div>
     </div>
@@ -186,7 +186,7 @@
       <div class="upload-box">
         <label for="f-upload" style="margin:0;text-transform:none;font-size:13px;color:var(--text);cursor:pointer;">⇧ Importar planilha (.xlsx / .csv)</label>
         <input type="file" id="f-upload" accept=".xlsx,.xls,.csv" onchange="handleUpload(event)">
-        <span>ou</span>
+        <span>a data de cada TA vem da própria planilha (CREATE_DATE) — pode importar vários dias de uma vez</span>
         <button class="ghost" onclick="document.getElementById('manual-ta-form').classList.toggle('show')">+ adicionar manualmente</button>
       </div>
 
@@ -199,31 +199,35 @@
         <div class="field">
           <label>Tipo</label>
           <select id="f-subtipo">
-            <option value="TA">Atendimento (TA)</option>
-            <option value="OS">Ordem de serviço (OS)</option>
+            <option value="TA">Válido</option>
+            <option value="OS">Transferido p/ OS</option>
           </select>
         </div>
         <button type="submit" class="primary">+ Adicionar</button>
       </form>
 
       <div id="upload-preview" style="display:none">
-        <p class="hint">Planilha lida: <span id="preview-count"></span> linha(s). Indique quais colunas usar:</p>
+        <p class="hint">Planilha lida: <span id="preview-count"></span> linha(s). <span id="auto-detect-msg"></span></p>
         <div class="map-row">
           <div class="field">
-            <label>Coluna do usuário</label>
+            <label>Coluna da data (CREATE_DATE)</label>
+            <select id="map-data" onchange="renderImportPreviewTable()"></select>
+          </div>
+          <div class="field">
+            <label>Coluna do usuário (User ID)</label>
             <select id="map-usuario" onchange="renderImportPreviewTable()"></select>
           </div>
           <div class="field">
-            <label>Coluna do tipo (opcional)</label>
+            <label>Coluna do resultado (CONSULTATION RESULT)</label>
             <select id="map-tipo" onchange="renderImportPreviewTable()"></select>
           </div>
           <div class="field">
-            <label>Texto que indica OS</label>
-            <input type="text" id="map-os-keyword" class="mono" value="ordem" oninput="renderImportPreviewTable()">
+            <label>Texto que marca transferência p/ OS</label>
+            <input type="text" id="map-os-keyword" class="mono" value="abertura de os" oninput="renderImportPreviewTable()">
           </div>
         </div>
         <table>
-          <thead><tr><th>Usuário</th><th>Tipo detectado</th></tr></thead>
+          <thead><tr><th>Data</th><th>Usuário</th><th>Resultado</th></tr></thead>
           <tbody id="preview-body"></tbody>
         </table>
         <div style="display:flex;gap:10px;margin-top:14px;">
@@ -291,19 +295,19 @@ function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(
 
 async function loadData(){
   try{
-    const res = await window.storage.get('lancamentos', false);
-    records = res && res.value ? JSON.parse(res.value) : [];
+    const raw = localStorage.getItem('lancamentos');
+    records = raw ? JSON.parse(raw) : [];
   }catch(e){ records = []; }
 }
 async function saveData(){
-  try{ await window.storage.set('lancamentos', JSON.stringify(records), false); }
+  try{ localStorage.setItem('lancamentos', JSON.stringify(records)); }
   catch(e){ console.error('Falha ao salvar localmente', e); }
 }
 
 async function loadConfig(){
   try{
-    const res = await window.storage.get('config', false);
-    config = res && res.value ? JSON.parse(res.value) : {sheetsUrl:''};
+    const raw = localStorage.getItem('config');
+    config = raw ? JSON.parse(raw) : {sheetsUrl:''};
   }catch(e){ config = {sheetsUrl:''}; }
   document.getElementById('cfg-url').value = config.sheetsUrl || '';
   if(config.sheetsUrl) document.getElementById('cfg-panel').open = false;
@@ -311,7 +315,7 @@ async function loadConfig(){
 }
 async function saveConfig(){
   config.sheetsUrl = document.getElementById('cfg-url').value.trim();
-  try{ await window.storage.set('config', JSON.stringify(config), false); }catch(e){}
+  try{ localStorage.setItem('config', JSON.stringify(config)); }catch(e){}
   updateSyncStatus();
   await testConnection();
 }
@@ -391,7 +395,7 @@ function handleUpload(ev){
   reader.onload = (e) => {
     try{
       const data = new Uint8Array(e.target.result);
-      const wb = XLSX.read(data, {type:'array'});
+      const wb = XLSX.read(data, {type:'array', cellDates:true});
       const ws = wb.Sheets[wb.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
       if(rows.length < 2){ alert('A planilha parece vazia ou sem dados.'); return; }
@@ -399,10 +403,26 @@ function handleUpload(ev){
       const dataRows = rows.slice(1).filter(r=>r.some(c=>String(c).trim()!==''));
       pendingImport = {headers, dataRows};
       document.getElementById('preview-count').textContent = dataRows.length;
+      const dataSel = document.getElementById('map-data');
       const userSel = document.getElementById('map-usuario');
       const tipoSel = document.getElementById('map-tipo');
-      userSel.innerHTML = headers.map((h,i)=>`<option value="${i}">${h||('Coluna '+(i+1))}</option>`).join('');
-      tipoSel.innerHTML = '<option value="">(nenhuma — todas TA)</option>'+headers.map((h,i)=>`<option value="${i}">${h||('Coluna '+(i+1))}</option>`).join('');
+      const opts = headers.map((h,i)=>`<option value="${i}">${h||('Coluna '+(i+1))}</option>`).join('');
+      dataSel.innerHTML = opts;
+      userSel.innerHTML = opts;
+      tipoSel.innerHTML = '<option value="">(nenhuma — todos válidos)</option>'+opts;
+
+      const autoDateIdx = findColumn_(headers, 'create_date') >=0 ? findColumn_(headers, 'create_date') : findColumn_(headers, 'create date');
+      const autoUserIdx = findColumn_(headers, 'user id');
+      const autoResultIdx = findColumn_(headers, 'consultation result');
+      if(autoDateIdx>=0) dataSel.value = String(autoDateIdx);
+      if(autoUserIdx>=0) userSel.value = String(autoUserIdx);
+      if(autoResultIdx>=0) tipoSel.value = String(autoResultIdx);
+      const msgs = [];
+      msgs.push(autoDateIdx>=0 ? 'data detectada em "'+headers[autoDateIdx]+'"' : 'não encontrei CREATE_DATE — selecione manualmente');
+      msgs.push(autoUserIdx>=0 ? 'usuário detectado em "'+headers[autoUserIdx]+'"' : 'não encontrei User ID — selecione manualmente');
+      msgs.push(autoResultIdx>=0 ? 'resultado detectado em "'+headers[autoResultIdx]+'"' : 'não encontrei CONSULTATION RESULT — selecione manualmente');
+      document.getElementById('auto-detect-msg').textContent = msgs.join(', ')+'.';
+
       document.getElementById('upload-preview').style.display = 'block';
       renderImportPreviewTable();
     }catch(err){
@@ -412,48 +432,81 @@ function handleUpload(ev){
   reader.readAsArrayBuffer(file);
   ev.target.value = '';
 }
+function findColumn_(headers, needle){
+  const n = needle.toLowerCase();
+  let idx = headers.findIndex(h=>h.toLowerCase().trim()===n);
+  if(idx>=0) return idx;
+  return headers.findIndex(h=>h.toLowerCase().includes(n));
+}
 function classifySubtipo(row, tIdx, keyword){
   if(tIdx===null || tIdx==='') return 'TA';
   const val = String(row[parseInt(tIdx,10)]||'').toLowerCase();
-  const kw = (keyword||'ordem').toLowerCase();
+  const kw = (keyword||'abertura de os').toLowerCase();
   return val.includes(kw) ? 'OS' : 'TA';
+}
+function parseDateCell_(val){
+  if(val===''||val===null||val===undefined) return null;
+  if(val instanceof Date && !isNaN(val)){
+    return val.getFullYear()+'-'+String(val.getMonth()+1).padStart(2,'0')+'-'+String(val.getDate()).padStart(2,'0');
+  }
+  const s = String(val).trim();
+  let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(m) return m[3]+'-'+m[1].padStart(2,'0')+'-'+m[2].padStart(2,'0');
+  m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(m) return m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0');
+  return null;
 }
 function renderImportPreviewTable(){
   if(!pendingImport) return;
+  const dIdx = parseInt(document.getElementById('map-data').value,10);
   const uIdx = parseInt(document.getElementById('map-usuario').value,10);
   const tIdxRaw = document.getElementById('map-tipo').value;
   const keyword = document.getElementById('map-os-keyword').value;
   const body = document.getElementById('preview-body');
   const preview = pendingImport.dataRows.slice(0,6);
   body.innerHTML = preview.map(row=>{
+    const dataIso = parseDateCell_(row[dIdx]);
     const usuario = String(row[uIdx]||'').trim() || '—';
     const subtipo = classifySubtipo(row, tIdxRaw, keyword);
-    return `<tr><td>${usuario}</td><td>${subtipo==='OS'?'<span class="tag os">OS</span>':'<span class="tag ta">TA</span>'}</td></tr>`;
-  }).join('') + (pendingImport.dataRows.length>6 ? `<tr><td colspan="2" class="empty">+ ${pendingImport.dataRows.length-6} linha(s)...</td></tr>` : '');
+    return `<tr><td class="mono">${dataIso?fmtDateBR(dataIso):'<span style="color:var(--rose)">data inválida</span>'}</td><td>${usuario}</td><td>${subtipo==='OS'?'<span class="tag os">Transferido p/ OS</span>':'<span class="tag ta">Válido</span>'}</td></tr>`;
+  }).join('') + (pendingImport.dataRows.length>6 ? `<tr><td colspan="3" class="empty">+ ${pendingImport.dataRows.length-6} linha(s)...</td></tr>` : '');
 }
 async function confirmImport(){
   if(!pendingImport) return;
+  const dIdx = parseInt(document.getElementById('map-data').value,10);
   const uIdx = parseInt(document.getElementById('map-usuario').value,10);
   const tIdxRaw = document.getElementById('map-tipo').value;
   const keyword = document.getElementById('map-os-keyword').value;
-  const existing = records.filter(r=>r.data===selectedDate && r.tipo==='ticket');
-  if(existing.length>0){
-    const replace = confirm('Já existem '+existing.length+' TA(s) lançados para '+fmtDateBR(selectedDate)+'. OK para substituir, Cancelar para somar aos existentes.');
-    if(replace) records = records.filter(r=>!(r.data===selectedDate && r.tipo==='ticket'));
-  }
-  let count = 0;
+
+  const parsed = [];
+  let skipped = 0;
   pendingImport.dataRows.forEach(row=>{
+    const dataIso = parseDateCell_(row[dIdx]);
     const usuario = String(row[uIdx]||'').trim();
-    if(!usuario) return;
+    if(!dataIso || !usuario){ skipped++; return; }
     const subtipo = classifySubtipo(row, tIdxRaw, keyword);
-    records.push({id:uid(), data:selectedDate, tipo:'ticket', subtipo, usuario, valor:0});
-    count++;
+    parsed.push({data:dataIso, usuario, subtipo});
+  });
+  if(parsed.length===0){ alert('Nenhuma linha com data e usuário válidos para importar.'); return; }
+
+  const datesInFile = [...new Set(parsed.map(p=>p.data))].sort();
+  const existingDates = datesInFile.filter(d => records.some(r=>r.data===d && r.tipo==='ticket'));
+  if(existingDates.length>0){
+    const list = existingDates.map(fmtDateBR).join(', ');
+    const replace = confirm('Já existem TAs lançados para: '+list+'. OK para substituir esses dias, Cancelar para somar aos já existentes.');
+    if(replace) records = records.filter(r=>!(r.tipo==='ticket' && existingDates.includes(r.data)));
+  }
+
+  parsed.forEach(p=>{
+    records.push({id:uid(), data:p.data, tipo:'ticket', subtipo:p.subtipo, usuario:p.usuario, valor:0});
   });
   pendingImport = null;
   document.getElementById('upload-preview').style.display = 'none';
+  selectedDate = datesInFile[datesInFile.length-1];
+  document.getElementById('f-data').value = selectedDate;
   await persistAndSync();
   renderAll();
-  alert(count+' TA(s) importado(s) para '+fmtDateBR(selectedDate)+'.');
+  alert(parsed.length+' TA(s) importado(s) em '+datesInFile.length+' dia(s)'+(skipped>0?' ('+skipped+' linha(s) ignorada(s) por falta de data ou usuário)':'')+'.');
 }
 function cancelImport(){
   pendingImport = null;
@@ -502,7 +555,7 @@ function renderStats(){
   document.getElementById('stats').innerHTML = `
     <div class="stat amber"><div class="lbl">Orçamento total</div><div class="val">${fmtBRL(s.orcTotal)}</div></div>
     <div class="stat teal"><div class="lbl">Tickets totais</div><div class="val">${s.ticketsTotal}</div></div>
-    <div class="stat rose"><div class="lbl">Ordens de serviço</div><div class="val">${s.osCount}</div></div>
+    <div class="stat rose"><div class="lbl">Transferidos p/ OS</div><div class="val">${s.osCount}</div></div>
     <div class="stat"><div class="lbl">Dias registrados</div><div class="val">${Object.keys(groupBy(records,r=>r.data)).length}</div></div>
   `;
 }
@@ -517,20 +570,21 @@ function renderLancar(){
     body.innerHTML = '<tr><td colspan="3" class="empty">Nenhum TA lançado para '+fmtDateBR(selectedDate)+' ainda.</td></tr>';
   } else {
     body.innerHTML = dayTickets.map(r=>`
-      <tr><td>${r.usuario}</td><td>${r.subtipo==='OS'?'<span class="tag os">OS</span>':'<span class="tag ta">TA</span>'}</td>
+      <tr><td>${r.usuario}</td><td>${r.subtipo==='OS'?'<span class="tag os">Transferido p/ OS</span>':'<span class="tag ta">Válido</span>'}</td>
       <td style="text-align:right"><button class="del-btn" onclick="deleteEntry('${r.id}')">×</button></td></tr>
     `).join('');
   }
   document.getElementById('lista-usuarios').innerHTML = usuariosUnicos().map(u=>`<option value="${u}">`).join('');
 }
 function breakdownHtml(s){
-  const rows = Object.entries(s.byUser).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR'));
+  const rows = Object.entries(s.byUser).sort((a,b)=>b[1].ta-a[1].ta || a[0].localeCompare(b[0],'pt-BR'));
   let html = '<div class="breakdown">';
   html += `<div class="orcline"><span>Orçamento</span><span>${fmtBRL(s.orcTotal)}</span></div>`;
+  html += `<div class="orcline" style="color:var(--teal)"><span>Total de tickets</span><span>${s.ticketsTotal} (${s.taCount} válidos${s.osCount>0?', '+s.osCount+' p/ OS':''})</span></div>`;
   if(rows.length===0){ html += '<div class="empty">Sem TAs lançados.</div>'; }
   else{
     html += rows.map(([name,d])=>`
-      <div class="u"><span class="name">${name}</span><span class="nums">${d.ta+d.os} tickets${d.os>0?' ('+d.os+' OS)':''}</span></div>
+      <div class="u"><span class="name">${name}</span><span class="nums">${d.ta} válidos${d.os>0?' <span style="color:var(--text-faint)">(total '+(d.ta+d.os)+')</span>':''}</span></div>
     `).join('');
   }
   return html+'</div>';
@@ -547,8 +601,8 @@ function renderPeriodTable(elId, groups, labelFn){
           <span class="row-date">${labelFn(k)}</span>
           <span class="hide-mobile" style="color:var(--text-faint)">${Object.keys(s.byUser).length} usuário(s)</span>
           <span class="row-num" style="color:var(--amber)">${fmtBRL(s.orcTotal)}</span>
-          <span class="row-num" style="color:var(--teal)">${s.ticketsTotal} tick.</span>
-          <span class="row-num" style="color:var(--rose)">${s.osCount} OS</span>
+          <span class="row-num" style="color:var(--teal);font-weight:600;">${s.taCount} válidos</span>
+          <span class="row-num" style="color:var(--text-faint);font-size:12px;">${s.ticketsTotal} totais</span>
         </summary>
         <div class="expand">${breakdownHtml(s)}</div>
       </details>`;
@@ -581,7 +635,7 @@ function renderHistorico(){
   body.innerHTML = list.map(r=>`
     <tr>
       <td class="mono">${fmtDateBR(r.data)}</td><td>${r.usuario}</td>
-      <td>${r.tipo==='orcamento' ? '<span class="tag orc">Orçamento</span>' : (r.subtipo==='OS' ? '<span class="tag os">OS</span>' : '<span class="tag ta">TA</span>')}</td>
+      <td>${r.tipo==='orcamento' ? '<span class="tag orc">Orçamento</span>' : (r.subtipo==='OS' ? '<span class="tag os">Transferido p/ OS</span>' : '<span class="tag ta">Válido</span>')}</td>
       <td class="num">${r.valor>0 ? fmtBRL(r.valor) : '—'}</td>
       <td style="text-align:right"><button class="del-btn" onclick="deleteEntry('${r.id}')">×</button></td>
     </tr>`).join('');
@@ -592,7 +646,7 @@ function exportExcel(){
   const wb = XLSX.utils.book_new();
   const lanc = records.slice().sort((a,b)=>a.data.localeCompare(b.data)).map(r=>({
     Data: fmtDateBR(r.data), Usuario: r.usuario,
-    Tipo: r.tipo==='orcamento' ? 'Orçamento' : (r.subtipo==='OS' ? 'Ticket - OS' : 'Ticket - TA'),
+    Tipo: r.tipo==='orcamento' ? 'Orçamento' : (r.subtipo==='OS' ? 'Ticket - Transferido p/ OS' : 'Ticket - Válido'),
     Valor: r.valor
   }));
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(lanc), 'Lancamentos');
