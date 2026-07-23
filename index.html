@@ -185,6 +185,14 @@
   .login-card label{display:block;margin-bottom:4px;}
   .login-card input{width:100%;}
   .form-error{font-size:12px;color:var(--rose);min-height:16px;margin:2px 0 10px;}
+  .pw-wrap{position:relative;}
+  .pw-wrap input{width:100%;padding-right:34px;}
+  .pw-toggle{position:absolute;right:5px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-faint);display:flex;align-items:center;justify-content:center;padding:4px;border-radius:5px;}
+  .pw-toggle:hover{color:var(--accent);}
+  .pw-toggle svg{width:16px;height:16px;}
+  .pw-toggle .icon-off{display:none;}
+  .pw-toggle.showing .icon-on{display:none;}
+  .pw-toggle.showing .icon-off{display:block;}
 
   .modal-box.wide{max-width:560px;width:100%;}
   .admin-table{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:16px;}
@@ -208,10 +216,10 @@
   .unidade-fixa-chip svg{width:1.05em;height:1.05em;}
 
   .user-menu-wrap{position:relative;}
-  .user-chip{display:flex;align-items:center;gap:0.5em;height:2.3em;padding:0 0.8em 0 0.5em;border-radius:0.65em;background:var(--surface);border:1px solid var(--border);cursor:pointer;font-size:0.84em;font-family:'Manrope';font-weight:600;color:var(--text);transition:border-color .15s ease;}
-  .user-chip:hover{border-color:var(--accent);}
-  .user-chip .avatar{width:1.6em;height:1.6em;border-radius:50%;background:linear-gradient(135deg, var(--accent), var(--accent-2));color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.78em;font-weight:800;flex-shrink:0;}
-  .user-chip svg{width:0.9em;height:0.9em;color:var(--text-faint);}
+  .acct-chip{display:flex;align-items:center;gap:0.5em;height:2.3em;padding:0 0.8em 0 0.5em;border-radius:0.65em;background:var(--surface);border:1px solid var(--border);cursor:pointer;font-size:0.84em;font-family:'Manrope';font-weight:600;color:var(--text);transition:border-color .15s ease;}
+  .acct-chip:hover{border-color:var(--accent);}
+  .acct-chip .avatar{width:1.6em;height:1.6em;border-radius:50%;background:linear-gradient(135deg, var(--accent), var(--accent-2));color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.78em;font-weight:800;flex-shrink:0;}
+  .acct-chip svg{width:0.9em;height:0.9em;color:var(--text-faint);}
   .user-dropdown{position:absolute;top:calc(100% + 0.5em);right:0;min-width:13em;background:var(--surface);border:1px solid var(--border);border-radius:0.75em;box-shadow:var(--shadow);padding:0.4em;z-index:40;opacity:0;visibility:hidden;transform:translateY(-6px);transition:opacity .15s ease, transform .15s ease, visibility .15s ease;}
   .user-dropdown.open{opacity:1;visibility:visible;transform:translateY(0);}
   .user-dropdown .info{padding:0.5em 0.6em 0.6em;border-bottom:1px solid var(--border-soft);margin-bottom:0.3em;}
@@ -241,7 +249,14 @@
     <h2>Livro de bordo</h2>
     <p class="sub">Entre com seu usuário para continuar</p>
     <div class="field"><label for="login-usuario">Usuário</label><input type="text" id="login-usuario" autocomplete="username"></div>
-    <div class="field"><label for="login-senha">Senha</label><input type="password" id="login-senha" autocomplete="current-password"></div>
+    <div class="field"><label for="login-senha">Senha</label>
+      <div class="pw-wrap"><input type="password" id="login-senha" autocomplete="current-password">
+        <button type="button" class="pw-toggle" onclick="togglePw('login-senha', this)" tabindex="-1">
+          <svg class="icon-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+          <svg class="icon-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.7 18.7 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+        </button>
+      </div>
+    </div>
     <p class="form-error" id="login-erro"></p>
     <button class="primary" id="btn-entrar" style="width:100%;" onclick="fazerLogin()">Entrar</button>
   </div>
@@ -273,7 +288,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
       </button>
       <div class="user-menu-wrap">
-        <button class="user-chip" id="user-chip" onclick="toggleUserDropdown(event)">
+        <button class="acct-chip" id="user-chip" onclick="toggleUserDropdown(event)">
           <span class="avatar" id="user-avatar">?</span><span id="user-chip-nome">—</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </button>
@@ -292,7 +307,14 @@
     <div class="modal-box">
       <h3 style="margin:0 0 14px;font-family:'Outfit';font-size:15px;">Trocar senha</h3>
       <form onsubmit="salvarNovaSenha(event)">
-        <div class="field" style="margin-bottom:14px;"><label>Nova senha</label><input type="password" id="senha-nova" required></div>
+        <div class="field" style="margin-bottom:14px;"><label>Nova senha</label>
+          <div class="pw-wrap"><input type="password" id="senha-nova" required>
+            <button type="button" class="pw-toggle" onclick="togglePw('senha-nova', this)" tabindex="-1">
+              <svg class="icon-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              <svg class="icon-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.7 18.7 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+            </button>
+          </div>
+        </div>
         <div class="modal-actions">
           <button type="button" class="ghost" onclick="fecharModal('modal-senha')">Cancelar</button>
           <button type="submit" class="primary">Salvar</button>
@@ -338,7 +360,14 @@
         <input type="hidden" id="usf-id">
         <div class="field"><label>Nome</label><input type="text" id="usf-nome" required></div>
         <div class="field"><label>Usuário (login)</label><input type="text" id="usf-usuario" required></div>
-        <div class="field"><label>Senha</label><input type="text" id="usf-senha" placeholder="deixe em branco p/ manter"></div>
+        <div class="field"><label>Senha</label>
+          <div class="pw-wrap"><input type="password" id="usf-senha" placeholder="deixe em branco p/ manter">
+            <button type="button" class="pw-toggle" onclick="togglePw('usf-senha', this)" tabindex="-1">
+              <svg class="icon-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              <svg class="icon-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.7 18.7 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+            </button>
+          </div>
+        </div>
         <div class="field"><label>Nível</label>
           <select id="usf-nivel" onchange="toggleUnidadeUsuarioField()">
             <option value="comum">Comum</option>
@@ -617,6 +646,11 @@ async function manualRefresh(){
   }
 }
 
+function togglePw(inputId, btn){
+  const input = document.getElementById(inputId);
+  const showing = btn.classList.toggle('showing');
+  input.type = showing ? 'text' : 'password';
+}
 function maskCurrency(el){
   const digits = el.value.replace(/\D/g,'');
   if(digits===''){ el.value=''; return; }
@@ -1357,6 +1391,8 @@ function preencherFormUsuario(u){
   document.getElementById('usf-nome').value = u.nome;
   document.getElementById('usf-usuario').value = u.usuario;
   document.getElementById('usf-senha').value = '';
+  document.getElementById('usf-senha').type = 'password';
+  document.querySelector('.pw-toggle[onclick*="usf-senha"]').classList.remove('showing');
   document.getElementById('usf-nivel').value = u.nivel;
   toggleUnidadeUsuarioField();
   if(u.unidadeId) document.getElementById('usf-unidade').value = u.unidadeId;
@@ -1366,6 +1402,8 @@ function limparFormUsuario(){
   document.getElementById('usf-nome').value = '';
   document.getElementById('usf-usuario').value = '';
   document.getElementById('usf-senha').value = '';
+  document.getElementById('usf-senha').type = 'password';
+  document.querySelector('.pw-toggle[onclick*="usf-senha"]').classList.remove('showing');
   document.getElementById('usf-nivel').value = 'comum';
   toggleUnidadeUsuarioField();
 }
