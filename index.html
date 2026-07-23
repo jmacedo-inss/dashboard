@@ -272,6 +272,12 @@ function todayStr(){
   const d = new Date();
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
+const USER_NAME_MAP = {
+  'dpedro.bferr***': 'Bruna Ferrari',
+  'dpedro.mcarva***': 'Marcela Carvalho',
+  'dpedro.jhalc***': 'Jéssica Halcsik'
+};
+function displayName(usuario){ return USER_NAME_MAP[usuario] || usuario; }
 function fmtBRL(v){ return (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
 function fmtDateBR(iso){ const [y,m,d] = iso.split('-'); return d+'/'+m+'/'+y; }
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
@@ -563,7 +569,7 @@ function renderPeriodTable(elId, groups, labelFn){
     const rows = Object.entries(s.byUser).sort((a,b)=>b[1].ta-a[1].ta || a[0].localeCompare(b[0],'pt-BR'));
     const usersHtml = rows.length>0 ? rows.map(([name,d])=>`
       <div class="user-chip">
-        <div class="uc-name">${name}</div>
+        <div class="uc-name">${displayName(name)}</div>
         <div class="uc-nums">
           <div class="uc-stat"><div class="uc-lbl">Totais</div><div class="uc-val">${d.ta+d.os}</div></div>
           <div class="uc-stat valid"><div class="uc-lbl">Válidos</div><div class="uc-val">${d.ta}</div></div>
@@ -606,7 +612,7 @@ function renderMensal(){
 function renderHistorico(){
   const selU = document.getElementById('hist-usuario');
   const currentU = selU.value;
-  selU.innerHTML = '<option value="">Todos os usuários</option>'+usuariosUnicos().map(u=>`<option value="${u}">${u}</option>`).join('');
+  selU.innerHTML = '<option value="">Todos os usuários</option>'+usuariosUnicos().map(u=>`<option value="${u}">${displayName(u)}</option>`).join('');
   selU.value = currentU;
   const fu = document.getElementById('hist-usuario').value;
   const ft = document.getElementById('hist-tipo').value;
@@ -622,7 +628,7 @@ function renderHistorico(){
   if(list.length===0){ body.innerHTML = '<tr><td colspan="5" class="empty">Nenhum lançamento encontrado para este filtro.</td></tr>'; return; }
   body.innerHTML = list.map(r=>`
     <tr>
-      <td class="mono">${fmtDateBR(r.data)}</td><td>${r.usuario}</td>
+      <td class="mono">${fmtDateBR(r.data)}</td><td>${displayName(r.usuario)}</td>
       <td>${r.tipo==='orcamento' ? '<span class="tag orc">Orçamento</span>' : (r.subtipo==='OS' ? '<span class="tag os">Transferido p/ OS</span>' : '<span class="tag ta">Válido</span>')}</td>
       <td class="num">${r.valor>0 ? fmtBRL(r.valor) : '—'}</td>
       <td style="text-align:right"><button class="del-btn" onclick="deleteEntry('${r.id}')">×</button></td>
@@ -633,7 +639,7 @@ function renderAll(){ renderStats(); renderLancar(); renderDiario(); renderSeman
 function exportExcel(){
   const wb = XLSX.utils.book_new();
   const lanc = records.slice().sort((a,b)=>a.data.localeCompare(b.data)).map(r=>({
-    Data: fmtDateBR(r.data), Usuario: r.usuario,
+    Data: fmtDateBR(r.data), Usuario: displayName(r.usuario),
     Tipo: r.tipo==='orcamento' ? 'Orçamento' : (r.subtipo==='OS' ? 'Ticket - Transferido p/ OS' : 'Ticket - Válido'),
     Valor: r.valor
   }));
