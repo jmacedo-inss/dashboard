@@ -361,7 +361,7 @@
     <div class="modal-box wide">
       <h3 style="margin:0 0 14px;font-family:'Outfit';font-size:15px;">Usuários</h3>
       <table class="admin-table">
-        <thead><tr><th>Nome</th><th>Usuário</th><th>Nível</th><th>Unidade</th></tr></thead>
+        <thead><tr><th>Nome</th><th>Usuário</th><th>Nível</th><th>Unidade</th><th>ID do consultor</th></tr></thead>
         <tbody id="usuarios-tbody"></tbody>
       </table>
       <form class="admin-form" onsubmit="salvarUsuario(event)">
@@ -1461,9 +1461,9 @@ async function carregarUsuariosAdmin(){
   tbody.innerHTML = usuarios.length ? usuarios.map(u=>{
     const unidadeNome = (unidadesTodasCache.find(un=>un.id===u.unidadeId)||{}).nome || '—';
     return `<tr onclick='preencherFormUsuario(${JSON.stringify(u).replace(/'/g,"&apos;")})'>
-      <td>${u.nome}</td><td>${u.usuario}</td><td>${nivelLabel_(u.nivel)}</td><td>${u.nivel==='admin'?'—':unidadeNome}</td>
+      <td>${u.nome}</td><td>${u.usuario}</td><td>${nivelLabel_(u.nivel)}</td><td>${u.nivel==='admin'?'—':unidadeNome}</td><td class="mono">${u.idConsultor||'—'}</td>
     </tr>`;
-  }).join('') : '<tr><td colspan="4" class="empty">Nenhum usuário cadastrado.</td></tr>';
+  }).join('') : '<tr><td colspan="5" class="empty">Nenhum usuário cadastrado.</td></tr>';
 }
 function preencherFormUsuario(u){
   document.getElementById('usf-id').value = u.id;
