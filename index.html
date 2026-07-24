@@ -1115,9 +1115,19 @@ function renderPeriodTable(elId, groups, labelFn){
       </div>`;
   }).join('');
 }
-function renderDiario(){ renderPeriodTable('diario-body', groupBy(records,r=>r.data), fmtDateBR); }
+function weekdayShort_(dateStr){
+  const dias = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  return dias[new Date(dateStr+'T00:00:00').getDay()];
+}
+function isoWeekNumber_(dateStr){
+  const d = new Date(dateStr+'T00:00:00');
+  d.setDate(d.getDate() + 3 - ((d.getDay()+6)%7));
+  const week1 = new Date(d.getFullYear(),0,4);
+  return 1 + Math.round(((d - week1)/86400000 - 3 + ((week1.getDay()+6)%7)) / 7);
+}
+function renderDiario(){ renderPeriodTable('diario-body', groupBy(records,r=>r.data), (k)=> weekdayShort_(k)+', '+fmtDateBR(k)); }
 function renderSemanal(){
-  renderPeriodTable('semanal-body', groupBy(records,r=>getMonday(r.data)), (monday)=> fmtDateBR(monday)+' – '+fmtDateBR(addDays(monday,6)));
+  renderPeriodTable('semanal-body', groupBy(records,r=>getMonday(r.data)), (monday)=> 'W'+isoWeekNumber_(monday)+' · '+fmtDateBR(monday)+' – '+fmtDateBR(addDays(monday,6)));
 }
 function renderMensal(){
   renderPeriodTable('mensal-body', groupBy(records,r=>monthKey(r.data)), (mk)=> monthLabel(mk).replace(/^./, c=>c.toUpperCase()));
