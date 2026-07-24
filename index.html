@@ -1017,7 +1017,7 @@ function renderGoalCards(){
       <div class="rank-top"><span class="rank-name">${displayName(u.name)}</span><span class="rank-val">${u.valid}/${GOALS.validosPorConsultor}</span></div>
       <div class="goal-track small"><div class="goal-fill valid" style="width:0%" data-target="${pct}"></div></div>
     </div>`;
-  }).join('') : '<div class="rank-empty">Sem TAs no mês</div>';
+  }).join('') : '<div class="rank-empty">Nenhum consultor cadastrado</div>';
 
   document.getElementById('goal-cards').innerHTML = `
     <div class="goal-card">
@@ -1088,7 +1088,7 @@ function renderPeriodTable(elId, groups, labelFn){
           <div class="uc-stat valid"><div class="uc-lbl">Válidos</div><div class="uc-val">${d.ta}</div></div>
         </div>
       </div>
-    `).join('') : '<div class="empty" style="padding:2px 0;">Sem TAs lançados.</div>';
+    `).join('') : '<div class="empty" style="padding:2px 0;">Nenhum consultor cadastrado</div>';
     return `
       <div class="day-card">
         <div class="dc-header">${labelFn(k)}</div>
