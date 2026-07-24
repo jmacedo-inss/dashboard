@@ -378,11 +378,12 @@
         </div>
         <div class="field"><label>Nível</label>
           <select id="usf-nivel" onchange="toggleUnidadeUsuarioField()">
-            <option value="comum">Comum</option>
+            <option value="consultor">Consultor L1</option>
             <option value="admin">Admin</option>
           </select>
         </div>
         <div class="field" id="usf-unidade-wrap"><label>Unidade</label><select id="usf-unidade"></select></div>
+        <div class="full field"><label>ID do consultor (User ID da planilha, opcional)</label><input type="text" id="usf-id-consultor" class="mono" placeholder="ex: dpedro.mcarva***"></div>
         <div class="full" style="display:flex;gap:8px;">
           <button type="submit" class="primary">Salvar usuário</button>
           <button type="button" class="ghost" onclick="limparFormUsuario()">Novo usuário</button>
@@ -542,13 +543,38 @@ function todayStr(){
   const d = new Date();
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
-const USER_NAME_MAP = {
+const USER_NAME_MAP_FALLBACK = {
   'dpedro.bferr***': 'Bruna Ferrari',
   'dpedro.mcarva***': 'Marcela Carvalho',
   'dpedro.jhalc***': 'Jéssica Halcsik',
   'dpedro.g***': 'Guilherme Menezes'
 };
-function displayName(usuario){ return USER_NAME_MAP[usuario] || usuario; }
+let consultorNomeMap = {};
+function displayName(usuario){ return consultorNomeMap[usuario] || USER_NAME_MAP_FALLBACK[usuario] || usuario; }
+let usuariosTodosCache = [];
+function ehConsultor_(nivel){ return nivel === 'consultor' || nivel === 'comum'; }
+function nivelLabel_(nivel){ return nivel === 'admin' ? 'Admin' : 'Consultor L1'; }
+async function atualizarMapaConsultores_(){
+  if(!config.sheetsUrl) return;
+  try{
+    const res = await fetch(config.sheetsUrl+'?action=usuarios');
+    const usuarios = await res.json();
+    usuariosTodosCache = usuarios || [];
+    const mapa = {};
+    usuariosTodosCache.forEach(u=>{ if(u.idConsultor) mapa[u.idConsultor] = u.nome; });
+    consultorNomeMap = mapa;
+  }catch(e){ /* mantém o mapa anterior em caso de falha */ }
+}
+function consultoresDaUnidade_(){
+  return usuariosTodosCache.filter(u => ehConsultor_(u.nivel) && u.unidadeId===session.unidadeId && u.idConsultor);
+}
+function comZerosParaConsultores_(byUser){
+  const out = {...byUser};
+  consultoresDaUnidade_().forEach(c=>{
+    if(!out[c.idConsultor]) out[c.idConsultor] = {ta:0, os:0};
+  });
+  return out;
+}
 function fmtBRL(v){ return (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
 function fmtDateBR(iso){ const [y,m,d] = iso.split('-'); return d+'/'+m+'/'+y; }
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
@@ -981,7 +1007,7 @@ function renderGoalCards(){
   const orc = monthProgress(s.orcTotal, GOALS.orcamento, info.daysElapsed, info.daysInMonth);
   const val = monthProgress(s.taCount, GOALS.validos, info.daysElapsed, info.daysInMonth);
 
-  const ranking = Object.entries(s.byUser)
+  const ranking = Object.entries(comZerosParaConsultores_(s.byUser))
     .map(([name,d])=>({name, valid:d.ta}))
     .sort((a,b)=> b.valid-a.valid || a.name.localeCompare(b.name,'pt-BR'));
   const rankingHtml = ranking.length>0 ? ranking.map(u=>{
@@ -1053,7 +1079,7 @@ function renderPeriodTable(elId, groups, labelFn){
   if(keys.length===0){ el.innerHTML = '<div class="empty">Nenhum lançamento ainda.</div>'; return; }
   el.innerHTML = keys.map(k=>{
     const s = daySummary(groups[k]);
-    const rows = Object.entries(s.byUser).sort((a,b)=>b[1].ta-a[1].ta || a[0].localeCompare(b[0],'pt-BR'));
+    const rows = Object.entries(comZerosParaConsultores_(s.byUser)).sort((a,b)=>b[1].ta-a[1].ta || a[0].localeCompare(b[0],'pt-BR'));
     const usersHtml = rows.length>0 ? rows.map(([name,d])=>`
       <div class="user-chip">
         <div class="uc-name">${displayName(name)}</div>
@@ -1251,7 +1277,7 @@ function renderUserChip(){
   document.getElementById('user-chip-nome').textContent = session.nome;
   document.getElementById('user-avatar').textContent = (session.nome||'?').trim().charAt(0).toUpperCase();
   document.getElementById('user-dropdown-nome').textContent = session.nome;
-  document.getElementById('user-dropdown-nivel').textContent = session.nivel === 'admin' ? 'Administrador' : 'Usuário comum';
+  document.getElementById('user-dropdown-nivel').textContent = session.nivel === 'admin' ? 'Administrador' : 'Consultor L1';
   document.getElementById('btn-unidades').hidden = session.nivel !== 'admin';
   document.getElementById('btn-usuarios').hidden = session.nivel !== 'admin';
 }
@@ -1302,6 +1328,7 @@ async function trocarUnidade(id){
 }
 async function carregarDadosUnidadeAtual(){
   aplicarMetasUnidade_(currentUnidadeObj());
+  await atualizarMapaConsultores_();
   const ok = session.unidadeId ? await fetchFromSheets() : false;
   if(!ok) await loadData();
   renderAll();
@@ -1434,7 +1461,7 @@ async function carregarUsuariosAdmin(){
   tbody.innerHTML = usuarios.length ? usuarios.map(u=>{
     const unidadeNome = (unidadesTodasCache.find(un=>un.id===u.unidadeId)||{}).nome || '—';
     return `<tr onclick='preencherFormUsuario(${JSON.stringify(u).replace(/'/g,"&apos;")})'>
-      <td>${u.nome}</td><td>${u.usuario}</td><td>${u.nivel}</td><td>${u.nivel==='admin'?'—':unidadeNome}</td>
+      <td>${u.nome}</td><td>${u.usuario}</td><td>${nivelLabel_(u.nivel)}</td><td>${u.nivel==='admin'?'—':unidadeNome}</td>
     </tr>`;
   }).join('') : '<tr><td colspan="4" class="empty">Nenhum usuário cadastrado.</td></tr>';
 }
@@ -1446,6 +1473,7 @@ function preencherFormUsuario(u){
   document.getElementById('usf-senha').type = 'password';
   document.querySelector('.pw-toggle[onclick*="usf-senha"]').classList.remove('showing');
   document.getElementById('usf-nivel').value = u.nivel;
+  document.getElementById('usf-id-consultor').value = u.idConsultor || '';
   toggleUnidadeUsuarioField();
   if(u.unidadeId) document.getElementById('usf-unidade').value = u.unidadeId;
 }
@@ -1456,7 +1484,8 @@ function limparFormUsuario(){
   document.getElementById('usf-senha').value = '';
   document.getElementById('usf-senha').type = 'password';
   document.querySelector('.pw-toggle[onclick*="usf-senha"]').classList.remove('showing');
-  document.getElementById('usf-nivel').value = 'comum';
+  document.getElementById('usf-nivel').value = 'consultor';
+  document.getElementById('usf-id-consultor').value = '';
   toggleUnidadeUsuarioField();
 }
 async function salvarUsuario(ev){
@@ -1469,7 +1498,8 @@ async function salvarUsuario(ev){
     usuario: document.getElementById('usf-usuario').value.trim(),
     senha: document.getElementById('usf-senha').value,
     nivel,
-    unidadeId: nivel==='admin' ? '' : document.getElementById('usf-unidade').value
+    unidadeId: nivel==='admin' ? '' : document.getElementById('usf-unidade').value,
+    idConsultor: document.getElementById('usf-id-consultor').value.trim()
   };
   if(!usuarioObj.nome || !usuarioObj.usuario) return;
   if(!usuarioObj.senha && !id){ alert('Defina uma senha para o novo usuário.'); return; }
@@ -1477,8 +1507,10 @@ async function salvarUsuario(ev){
     method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
     body: JSON.stringify({action:'saveUsuario', usuarioObj})
   });
+  await atualizarMapaConsultores_();
   await carregarUsuariosAdmin();
   limparFormUsuario();
+  renderAll();
 }
 
 (async function init(){
