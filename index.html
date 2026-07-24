@@ -569,9 +569,9 @@ function consultoresDaUnidade_(){
   return usuariosTodosCache.filter(u => ehConsultor_(u.nivel) && u.unidadeId===session.unidadeId && u.idConsultor);
 }
 function comZerosParaConsultores_(byUser){
-  const out = {...byUser};
+  const out = {};
   consultoresDaUnidade_().forEach(c=>{
-    if(!out[c.idConsultor]) out[c.idConsultor] = {ta:0, os:0};
+    out[c.idConsultor] = byUser[c.idConsultor] || {ta:0, os:0};
   });
   return out;
 }
