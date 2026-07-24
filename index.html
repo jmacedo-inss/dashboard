@@ -498,6 +498,7 @@
 #pedidosApp .historico-vazio { font-size: 0.8em; color: var(--text-faint); font-style:italic; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
 
@@ -837,9 +838,9 @@
       </div>
       <div class="field-grid-2">
         <div class="field"><label for="unfCodigoAsc">Código ASC</label><input type="text" id="unfCodigoAsc" placeholder="Ex: 4180016"></div>
-        <div class="field"><label for="unfSenhaOfs">Senha da planilha OFS</label><input type="text" id="unfSenhaOfs" placeholder="Senha de proteção do Excel"></div>
+        <div class="field"><label for="unfSenhaOfs">Senha da planilha OFS (opcional)</label><input type="text" id="unfSenhaOfs" placeholder="Anotação de referência"></div>
       </div>
-      <div class="config-note">Usados ao gerar a planilha de pedido adicional (OFS) pra Samsung, a partir dos pedidos selecionados.</div>
+      <div class="config-note">O Código ASC é usado ao gerar a planilha de pedido adicional (OFS) pra Samsung. A senha da planilha protegida gerada é sempre a mesma do arquivo de referência da Samsung (não depende do que for preenchido aqui — este campo é só uma anotação, caso queira guardar a senha real em algum lugar).</div>
       <div class="form-error" id="unidadeFormErro"></div>
       <div class="modal-actions">
         <button class="btn-ghost" id="cancelarUnidadeForm">Cancelar</button>
@@ -1917,6 +1918,17 @@
   var COLUNAS_OFS = ['ASC_CODE', 'PN', 'OFS_Proposal', 'DMD-3', 'DMD-2', 'DMD-1', 'M0_Fcst', 'Stock', 'MIL_days', 'ROP_Days', 'MIL_Qty', 'ROP_Qty', 'Sugest.Adic', 'Qtd Aceita', 'Remarks', 'Categoria'];
   var MAPA_CATEGORIA_OFS = { 'Celular': 'H.H.P', 'Tablet': 'TAB', 'Relógio': 'WATCH', 'Fones': 'AUDIO' };
 
+  // Hash de proteção extraído de um arquivo real da Samsung (Sheet Protection).
+  // Copiando esses valores exatos, a MESMA senha que já destrava o arquivo original
+  // da Samsung também destrava o arquivo gerado aqui — sem o sistema nunca precisar
+  // saber qual é a senha de verdade.
+  var PROTECAO_OFS = {
+    algorithmName: 'SHA-512',
+    hashValue: 'XRw3/WVcI67v6omaht/UImvcIf2HXhIIDRFB1PEZkDTQm8CfIchEAgz6YybltAdpmlbTP+Ibh4X2aOOMs40bXw==',
+    saltValue: 'LkoWjkaEoYmX9ori8OtRIQ==',
+    spinCount: 100000
+  };
+
   function obterConfigUnidadeAtual() {
     if (sessao.nivel === 'admin') {
       var u = sessao.unidades.find(function (x) { return x.ID === sessao.unidadeId; });
@@ -1965,6 +1977,12 @@
     return { quantidades: quantidades, categoriaPorPn: categoriaPorPn };
   }
 
+  function calcularQtdSugerida(qtdAceita) {
+    var minimo = qtdAceita + 1;
+    var maximo = Math.max(minimo, 9);
+    return minimo + Math.floor(Math.random() * (maximo - minimo + 1));
+  }
+
   function montarLinhasOfs(config) {
     var coleta = coletarPnsSelecionados();
     var pns = Object.keys(coleta.quantidades);
@@ -1979,7 +1997,8 @@
       var stock = 0;
       var milQty = Math.round((m0 * MIL_DAYS / 30) * 100) / 100;
       var ropQty = Math.round((m0 * ROP_DAYS / 30) * 100) / 100;
-      var sugestao = Math.max(0, Math.ceil(milQty - stock - 1e-9));
+      var qtdAceita = coleta.quantidades[pn];
+      var sugestao = calcularQtdSugerida(qtdAceita);
       var categoriaOriginal = coleta.categoriaPorPn[pn] || '';
       var categoria = MAPA_CATEGORIA_OFS[categoriaOriginal] || categoriaOriginal;
       var linha = {};
@@ -1996,14 +2015,14 @@
       linha['MIL_Qty'] = milQty;
       linha['ROP_Qty'] = ropQty;
       linha['Sugest.Adic'] = sugestao;
-      linha['Qtd Aceita'] = coleta.quantidades[pn];
+      linha['Qtd Aceita'] = qtdAceita;
       linha['Remarks'] = '';
       linha['Categoria'] = categoria;
       return linha;
     });
   }
 
-  function gerarArquivoExcelOfs(linhas, senha) {
+  function gerarArquivoExcelOfs(linhas) {
     if (typeof ExcelJS === 'undefined') {
       toast('Biblioteca de Excel não carregou. Verifique sua conexão e recarregue a página.', 'err');
       return;
@@ -2033,10 +2052,9 @@
       ws.getColumn(i + 1).width = Math.max(11, nomeCol.length + 2);
     });
 
-    ws.protect(senha, { selectLockedCells: true, selectUnlockedCells: true });
-
     wb.xlsx.writeBuffer().then(function (buffer) {
-      var blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      return injetarProtecaoReal(buffer);
+    }).then(function (blob) {
       var url = URL.createObjectURL(blob);
       var a = document.createElement('a');
       a.href = url;
@@ -2052,11 +2070,30 @@
     });
   }
 
+  /**
+   * Substitui a proteção "genérica" que o ExcelJS geraria por um bloco
+   * <sheetProtection> copiado byte a byte de um arquivo real da Samsung
+   * (mesmo algoritmo, hash e salt). Resultado: a senha que já destrava o
+   * arquivo original da Samsung também destrava este aqui.
+   */
+  function injetarProtecaoReal(buffer) {
+    if (typeof JSZip === 'undefined') return Promise.reject(new Error('JSZip não carregou'));
+    var tag = '<sheetProtection algorithmName="' + PROTECAO_OFS.algorithmName + '" hashValue="' + PROTECAO_OFS.hashValue +
+      '" saltValue="' + PROTECAO_OFS.saltValue + '" spinCount="' + PROTECAO_OFS.spinCount + '" sheet="1" objects="1" scenarios="1"/>';
+    return JSZip.loadAsync(buffer).then(function (zip) {
+      return zip.file('xl/worksheets/sheet1.xml').async('string').then(function (xml) {
+        var novoXml = xml.replace('</sheetData>', '</sheetData>' + tag);
+        zip.file('xl/worksheets/sheet1.xml', novoXml);
+        return zip.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      });
+    });
+  }
+
   function exportarOfs() {
     if (!selecionados.size) { toast('Selecione ao menos um pedido', 'err'); return; }
     var config = obterConfigUnidadeAtual();
-    if (!config.codigoAsc || !config.senhaOfs) {
-      toast('Configure o Código ASC e a Senha OFS dessa unidade primeiro (menu do usuário → Gerenciar unidades)', 'err');
+    if (!config.codigoAsc) {
+      toast('Configure o Código ASC dessa unidade primeiro (menu do usuário → Gerenciar unidades)', 'err');
       return;
     }
     var linhas = montarLinhasOfs(config);
@@ -2064,7 +2101,7 @@
       toast('Nenhuma peça (PN) encontrada nos pedidos selecionados', 'err');
       return;
     }
-    gerarArquivoExcelOfs(linhas, config.senhaOfs);
+    gerarArquivoExcelOfs(linhas);
   }
 
   el.bulkExportarOfs.onclick = exportarOfs;
