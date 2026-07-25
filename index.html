@@ -52,6 +52,17 @@
 
   .goal-cards{display:grid;grid-template-columns:1fr 1.6fr 0.9fr;gap:14px;margin-bottom:16px;}
   .goal-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:13px 18px;box-shadow:var(--shadow);display:flex;flex-direction:column;animation:fadeIn .3s ease;}
+  .goal-card.orc-gradient{background:linear-gradient(135deg, var(--accent), var(--accent-2));border:none;box-shadow:0 0.6em 1.4em rgba(var(--accent-rgb),0.35);}
+  .goal-card.orc-gradient .gc-title{color:rgba(255,255,255,0.82);}
+  .goal-card.orc-gradient .gc-value{color:#fff;}
+  .goal-card.orc-gradient .gc-goal-suffix{color:rgba(255,255,255,0.68);}
+  .goal-card.orc-gradient .gc-pct{color:rgba(255,255,255,0.92);}
+  .goal-card.orc-gradient .goal-track{background:rgba(255,255,255,0.28);}
+  .goal-card.orc-gradient .goal-fill.orc{background:#fff;}
+  .goal-card.orc-gradient .goal-mini{background:rgba(255,255,255,0.14);border-color:rgba(255,255,255,0.25);}
+  .goal-card.orc-gradient .goal-mini .lbl{color:rgba(255,255,255,0.72);}
+  .goal-card.orc-gradient .goal-mini .val{color:#fff;}
+  .goal-card.orc-gradient .proj-mini .val{color:#fff !important;}
   .goal-card .gc-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;}
   .goal-card .gc-title{font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;font-weight:600;}
   .goal-card .gc-value{font-family:'IBM Plex Mono';font-size:24px;font-weight:700;color:var(--text);margin-top:2px;}
@@ -387,6 +398,7 @@
         <div class="full" style="display:flex;gap:8px;">
           <button type="submit" class="primary">Salvar usuário</button>
           <button type="button" class="ghost" onclick="limparFormUsuario()">Novo usuário</button>
+          <button type="button" class="btn-danger-solid" id="btn-excluir-usuario" onclick="excluirUsuario()" style="display:none;margin-left:0;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>Excluir usuário</button>
           <button type="button" class="ghost" onclick="fecharModal('modal-usuarios')" style="margin-left:auto;">Fechar</button>
         </div>
       </form>
@@ -1019,8 +1031,13 @@ function renderGoalCards(){
     </div>`;
   }).join('') : '<div class="rank-empty">Nenhum consultor cadastrado</div>';
 
+  const faltaOrc = Math.max(GOALS.orcamento - s.orcTotal, 0);
+  const faltaOrcHtml = faltaOrc>0 ? fmtBRL(faltaOrc) : 'Meta atingida! 🎉';
+  const faltaVal = Math.max(GOALS.validos - s.taCount, 0);
+  const faltaValHtml = faltaVal>0 ? faltaVal : 'Meta atingida! 🎉';
+
   document.getElementById('goal-cards').innerHTML = `
-    <div class="goal-card">
+    <div class="goal-card orc-gradient">
       <div class="gc-head">
         <div><div class="gc-title">Orçamento — ${mesLabel}</div><div class="gc-value">${fmtBRL(s.orcTotal)}<span class="gc-goal-suffix">/${fmtBRL(GOALS.orcamento)}</span></div></div>
         <div class="gc-pct">${orc.pct.toFixed(0)}%</div>
@@ -1030,6 +1047,9 @@ function renderGoalCards(){
         <div class="goal-mini proj-mini">
           <div class="pm-row"><span class="lbl">Projeção</span><span class="val">${fmtBRL(orc.projection)}</span></div>
           <div class="goal-track small"><div class="goal-fill orc" style="width:0%" data-target="${Math.min(orc.projection/GOALS.orcamento*100,100)}"></div></div>
+        </div>
+        <div class="goal-mini falta-mini">
+          <div class="pm-row"><span class="lbl">Falta p/ meta</span><span class="val">${faltaOrcHtml}</span></div>
         </div>
       </div>
     </div>
@@ -1043,6 +1063,9 @@ function renderGoalCards(){
         <div class="goal-mini proj-mini">
           <div class="pm-row"><span class="lbl">Projeção</span><span class="val">${Math.round(val.projection)}</span></div>
           <div class="goal-track small"><div class="goal-fill valid" style="width:0%" data-target="${Math.min(val.projection/GOALS.validos*100,100)}"></div></div>
+        </div>
+        <div class="goal-mini falta-mini">
+          <div class="pm-row"><span class="lbl">Falta p/ meta</span><span class="val">${faltaValHtml}</span></div>
         </div>
       </div>
       <div class="goal-extra">
@@ -1486,6 +1509,7 @@ function preencherFormUsuario(u){
   document.getElementById('usf-id-consultor').value = u.idConsultor || '';
   toggleUnidadeUsuarioField();
   if(u.unidadeId) document.getElementById('usf-unidade').value = u.unidadeId;
+  document.getElementById('btn-excluir-usuario').style.display = '';
 }
 function limparFormUsuario(){
   document.getElementById('usf-id').value = '';
@@ -1497,6 +1521,22 @@ function limparFormUsuario(){
   document.getElementById('usf-nivel').value = 'consultor';
   document.getElementById('usf-id-consultor').value = '';
   toggleUnidadeUsuarioField();
+  document.getElementById('btn-excluir-usuario').style.display = 'none';
+}
+async function excluirUsuario(){
+  const id = document.getElementById('usf-id').value;
+  if(!id) return;
+  if(id === session.id){ alert('Você não pode excluir o próprio usuário logado.'); return; }
+  const nome = document.getElementById('usf-nome').value;
+  if(!confirm('Excluir o usuário "'+nome+'"? Essa ação não pode ser desfeita.')) return;
+  await fetch(config.sheetsUrl, {
+    method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify({action:'deleteUsuario', id})
+  });
+  await atualizarMapaConsultores_();
+  await carregarUsuariosAdmin();
+  limparFormUsuario();
+  renderAll();
 }
 async function salvarUsuario(ev){
   ev.preventDefault();
