@@ -50,7 +50,7 @@
   details.cfg-panel[open] summary:before{content:"▾ ";}
   details.cfg-panel .cfg-inner{padding:0 16px 16px;}
 
-  .goal-cards{display:grid;grid-template-columns:1fr 1.6fr 0.9fr;gap:14px;margin-bottom:16px;}
+  .goal-cards{display:grid;grid-template-columns:1fr 1.35fr 0.9fr;gap:14px;margin-bottom:16px;}
   .goal-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:13px 18px;box-shadow:var(--shadow);display:flex;flex-direction:column;animation:fadeIn .3s ease;}
   .goal-card.orc-gradient{background:linear-gradient(135deg, var(--accent), var(--accent-2));border:none;box-shadow:0 0.6em 1.4em rgba(var(--accent-rgb),0.35);}
   .goal-card.orc-gradient .gc-title{color:rgba(255,255,255,0.82);}
@@ -76,24 +76,24 @@
   .goal-mini{background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;text-align:center;display:flex;flex-direction:column;justify-content:center;}
   .gc-stack{display:flex;flex-direction:column;justify-content:center;gap:6px;flex:1;}
   .gc-stack{display:flex;flex-direction:column;gap:8px;flex:1;}
-  .circles-wrap{display:flex;align-items:center;justify-content:center;gap:18px;margin:6px 0 10px;flex:1;}
+  .circles-wrap{display:flex;align-items:center;justify-content:center;gap:14px;margin:6px 0 10px;flex:1;flex-wrap:wrap;}
   .circle-wrap{position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
   .circle-wrap svg{transform:rotate(-90deg);}
   .circle-wrap circle{fill:none;}
   .circle-wrap .track{stroke:var(--surface-3);}
   .circle-wrap .fill{stroke-linecap:round;transition:stroke-dashoffset .8s ease;}
-  .circle-wrap.big{width:104px;height:104px;}
-  .circle-wrap.big svg{width:104px;height:104px;}
-  .circle-wrap.big .track{stroke-width:8;}
-  .circle-wrap.big .fill{stroke:var(--accent);stroke-width:8;}
-  .circle-wrap.big .circle-num{font-family:'IBM Plex Mono';font-size:26px;font-weight:700;color:var(--text);}
-  .circle-wrap.big .circle-sub{font-size:10px;color:var(--text-faint);margin-top:1px;}
-  .circle-wrap.small{width:62px;height:62px;}
-  .circle-wrap.small svg{width:62px;height:62px;}
-  .circle-wrap.small .track{stroke-width:5;}
-  .circle-wrap.small .fill{stroke:var(--accent-2);stroke-width:5;opacity:.55;}
-  .circle-wrap.small .circle-num{font-family:'IBM Plex Mono';font-size:14px;font-weight:500;color:var(--text-faint);}
-  .circle-wrap.small .circle-sub{font-size:7.5px;color:var(--text-faint);margin-top:0;}
+  .circle-wrap.big{width:150px;height:150px;}
+  .circle-wrap.big svg{width:150px;height:150px;}
+  .circle-wrap.big .track{stroke-width:9;}
+  .circle-wrap.big .fill{stroke:var(--accent);stroke-width:9;}
+  .circle-wrap.big .circle-num{font-family:'IBM Plex Mono';font-size:36px;font-weight:700;color:var(--text);}
+  .circle-wrap.big .circle-sub{font-size:12px;color:var(--text-faint);margin-top:2px;}
+  .circle-wrap.small{width:120px;height:120px;}
+  .circle-wrap.small svg{width:120px;height:120px;}
+  .circle-wrap.small .track{stroke-width:8;}
+  .circle-wrap.small .fill{stroke:var(--accent-2);stroke-width:8;opacity:.65;}
+  .circle-wrap.small .circle-num{font-family:'IBM Plex Mono';font-size:28px;font-weight:600;color:var(--text-faint);}
+  .circle-wrap.small .circle-sub{font-size:11px;color:var(--text-faint);margin-top:1px;text-transform:uppercase;letter-spacing:.05em;}
   .circle-label{position:absolute;text-align:center;}
   .gc-stack .goal-mini{flex:1;text-align:left;display:flex;flex-direction:column;justify-content:center;padding:6px 14px;}
   .gc-stack .goal-mini .pm-row{display:flex;justify-content:space-between;align-items:baseline;}
@@ -170,7 +170,17 @@
   .empty{color:var(--text-faint);font-size:13px;padding:20px 4px;text-align:center;}
 
   .day-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:8px;box-shadow:var(--shadow);animation:fadeIn .3s ease;}
-  .dc-header{font-family:'IBM Plex Mono';font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;}
+  .dc-header{font-family:'IBM Plex Mono';font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+  .badge-validado{background:rgba(14,163,126,.14);color:var(--teal);font-family:'Manrope';font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:.02em;}
+  .reasons-panel{margin-top:10px;padding-top:10px;border-top:1px dashed var(--border-soft);}
+  .reasons-title{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:6px;}
+  .reasons-table{width:100%;border-collapse:collapse;font-size:11.5px;}
+  .reasons-table th{text-align:center;color:var(--text-faint);font-weight:500;font-size:9.5px;text-transform:uppercase;padding:4px 6px;border-bottom:1px solid var(--border);}
+  .reasons-table th:first-child{text-align:left;}
+  .reasons-table td{text-align:center;padding:5px 6px;border-bottom:1px solid var(--border-soft);color:var(--text-dim);font-family:'IBM Plex Mono';}
+  .reasons-table td:first-child{text-align:left;color:var(--text);font-family:'Manrope';font-weight:600;}
+  .reasons-table td.tot{color:var(--rose);font-weight:700;}
+  .reasons-table tr:last-child td{border-bottom:none;}
   .dc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:stretch;}
 
   .orc-card{background:var(--surface-2);border:1px solid var(--border);border-radius:7px;padding:6px 14px;display:flex;flex-direction:column;justify-content:center;gap:1px;}
@@ -514,6 +524,28 @@
     </div>
 
     <div class="panel">
+      <div class="head-row">
+        <h2>Validar TAs pagos <span style="font-weight:400;color:var(--text-faint);font-size:12.5px;">(planilha de conciliação da Samsung)</span></h2>
+      </div>
+      <div class="upload-box">
+        <div class="upload-row">
+          <label for="f-validacao" class="upload-btn"><span class="ic">✓</span> Escolher planilha de pagamento</label>
+          <input type="file" id="f-validacao" accept=".xlsx,.xls,.csv" onchange="handleValidacaoUpload(event)">
+          <span id="validacao-filename" class="upload-filename">Nenhum arquivo selecionado</span>
+        </div>
+        <p class="hint">casa cada linha pelo OBJECT_ID com os TAs já importados, e substitui o resultado presumido pelo resultado real (Pagar/Descontar) — só funciona para TAs que já têm OBJECT_ID salvo.</p>
+      </div>
+
+      <div id="validacao-preview" style="display:none">
+        <p class="hint"><span id="validacao-auto-msg"></span></p>
+        <div style="display:flex;gap:10px;margin-top:10px;">
+          <button class="primary" onclick="confirmarValidacao()">Confirmar conciliação</button>
+          <button class="ghost" onclick="cancelarValidacao()">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
       <h2>Resumo por dia</h2>
       <div id="diario-body"></div>
     </div>
@@ -696,7 +728,8 @@ async function fetchFromSheets(){
     if(!Array.isArray(remote)) return false;
     records = remote.map(r=>({
       id: String(r.id), data: normalizeDateStr_(r.data), tipo: r.tipo,
-      subtipo: r.subtipo || null, usuario: r.usuario, valor: parseFloat(r.valor)||0
+      subtipo: r.subtipo || null, usuario: r.usuario, valor: parseFloat(r.valor)||0,
+      objectId: r.objectId || '', validado: r.validado || '', motivos: r.motivos || ''
     }));
     await saveData();
     return true;
@@ -807,9 +840,11 @@ function handleUpload(ev){
       const autoDateIdx = findColumn_(headers, 'create_date') >=0 ? findColumn_(headers, 'create_date') : findColumn_(headers, 'create date');
       const autoUserIdx = findColumn_(headers, 'user id');
       const autoResultIdx = findColumn_(headers, 'consultation result');
+      const autoObjectIdx = findColumn_(headers, 'object_id');
       if(autoDateIdx>=0) dataSel.value = String(autoDateIdx);
       if(autoUserIdx>=0) userSel.value = String(autoUserIdx);
       if(autoResultIdx>=0) tipoSel.value = String(autoResultIdx);
+      pendingImport.objectIdIdx = autoObjectIdx;
 
       const msgEl = document.getElementById('auto-detect-msg');
       const problems = [];
@@ -818,7 +853,7 @@ function handleUpload(ev){
       if(problems.length>0){
         msgEl.innerHTML = '<b style="color:var(--rose)">Não consegui identificar sozinho '+problems.join(' e ')+'. Selecione manualmente abaixo antes de confirmar.</b><br>Cabeçalhos encontrados na planilha: '+headers.map(h=>h||'(vazio)').join(', ');
       } else {
-        msgEl.textContent = 'Detectado automaticamente: data em "'+headers[autoDateIdx]+'", usuário em "'+headers[autoUserIdx]+'"'+(autoResultIdx>=0?', resultado em "'+headers[autoResultIdx]+'"':', resultado não identificado — selecione manualmente se quiser separar válidos de OS')+'.';
+        msgEl.textContent = 'Detectado automaticamente: data em "'+headers[autoDateIdx]+'", usuário em "'+headers[autoUserIdx]+'"'+(autoResultIdx>=0?', resultado em "'+headers[autoResultIdx]+'"':', resultado não identificado — selecione manualmente se quiser separar válidos de OS')+(autoObjectIdx>=0?', OBJECT_ID em "'+headers[autoObjectIdx]+'" (usado depois para conciliar com a validação da Samsung)':'')+'.';
       }
 
       document.getElementById('upload-preview').style.display = 'block';
@@ -830,8 +865,11 @@ function handleUpload(ev){
   reader.readAsArrayBuffer(file);
   ev.target.value = '';
 }
+function normalizarTexto_(s){
+  return String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+}
 function findColumn_(headers, needle){
-  const norm = s => s.toLowerCase().replace(/[\s_]+/g,' ').trim();
+  const norm = s => normalizarTexto_(s).replace(/[\s_]+/g,' ').trim();
   const n = norm(needle);
   let idx = headers.findIndex(h=>norm(h)===n);
   if(idx>=0) return idx;
@@ -901,7 +939,8 @@ async function confirmImport(){
       skipped++;
     } else {
       const subtipo = classifySubtipo(row, tIdxRaw, keyword);
-      parsed.push({data:dataIso, usuario, subtipo});
+      const objectId = (pendingImport.objectIdIdx>=0) ? String(row[pendingImport.objectIdIdx]||'').trim() : '';
+      parsed.push({data:dataIso, usuario, subtipo, objectId});
     }
     if(i % chunk === 0 || i === total-1){
       const pct = 2 + Math.round(((i+1)/total)*58);
@@ -924,7 +963,7 @@ async function confirmImport(){
   await new Promise(r=>setTimeout(r,0));
 
   parsed.forEach(p=>{
-    records.push({id:uid(), data:p.data, tipo:'ticket', subtipo:p.subtipo, usuario:p.usuario, valor:0});
+    records.push({id:uid(), data:p.data, tipo:'ticket', subtipo:p.subtipo, usuario:p.usuario, valor:0, objectId:p.objectId||'', validado:''});
   });
   pendingImport = null;
   document.getElementById('upload-preview').style.display = 'none';
@@ -962,6 +1001,92 @@ function cancelImport(){
   document.getElementById('upload-preview').style.display = 'none';
 }
 
+function findLastColumn_(headers, needle){
+  const norm = s => normalizarTexto_(s).replace(/[\s_]+/g,' ').trim();
+  const n = norm(needle);
+  let idx = -1;
+  headers.forEach((h,i)=>{ if(norm(h)===n || norm(h).includes(n)) idx = i; });
+  return idx;
+}
+let pendingValidacao = null;
+function handleValidacaoUpload(ev){
+  const file = ev.target.files[0];
+  if(!file) return;
+  document.getElementById('validacao-filename').textContent = file.name;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try{
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, {type:'array', cellDates:true});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+      if(rows.length < 2){ alert('A planilha parece vazia ou sem dados.'); return; }
+      const headers = rows[0].map(h=>String(h).trim());
+      const dataRows = rows.slice(1).filter(r=>r.some(c=>String(c).trim()!==''));
+      const objectIdIdx = findColumn_(headers, 'object_id');
+      const condicaoIdx = findColumn_(headers, 'condicao final') >=0 ? findColumn_(headers, 'condicao final') : findColumn_(headers, 'condição final');
+      const serialStatusIdx = findLastColumn_(headers, 'zzserial_no');
+      const imeiStatusIdx = findLastColumn_(headers, 'zzimei');
+      const os30Idx = findColumn_(headers, 'cond os');
+      const dupIdx = findColumn_(headers, 'duplicidade');
+      const fenrirIdx = findColumn_(headers, 'fenrir');
+      const msgEl = document.getElementById('validacao-auto-msg');
+      if(objectIdIdx<0 || condicaoIdx<0){
+        msgEl.innerHTML = '<b style="color:var(--rose)">Não encontrei as colunas OBJECT_ID e/ou Condição Final nessa planilha.</b><br>Cabeçalhos encontrados: '+headers.map(h=>h||'(vazio)').join(', ');
+        pendingValidacao = null;
+        document.getElementById('validacao-preview').style.display = 'block';
+        return;
+      }
+      pendingValidacao = {headers, dataRows, objectIdIdx, condicaoIdx, serialStatusIdx, imeiStatusIdx, os30Idx, dupIdx, fenrirIdx};
+      const motivosAchados = ['serial','imei','os30','dup','fenrir'].filter((_,i)=>[serialStatusIdx,imeiStatusIdx,os30Idx,dupIdx,fenrirIdx][i]>=0);
+      msgEl.textContent = 'Detectado: OBJECT_ID em "'+headers[objectIdIdx]+'", resultado em "'+headers[condicaoIdx]+'". '+dataRows.length+' linha(s) lidas. Motivos de recusa identificados: '+(motivosAchados.length>0?motivosAchados.join(', '):'nenhum')+'.';
+      document.getElementById('validacao-preview').style.display = 'block';
+    }catch(err){
+      alert('Não consegui ler essa planilha. Confira se o arquivo é .xlsx, .xls ou .csv válido.');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  ev.target.value = '';
+}
+function cancelarValidacao(){
+  pendingValidacao = null;
+  document.getElementById('validacao-preview').style.display = 'none';
+}
+async function confirmarValidacao(){
+  if(!pendingValidacao) return;
+  const {dataRows, objectIdIdx, condicaoIdx, serialStatusIdx, imeiStatusIdx, os30Idx, dupIdx, fenrirIdx} = pendingValidacao;
+  const mapa = {};
+  dataRows.forEach(row=>{
+    const objectId = String(row[objectIdIdx]||'').trim();
+    if(!objectId) return;
+    const cond = normalizarTexto_(row[condicaoIdx]||'').trim();
+    const status = cond.includes('pagar') ? 'pagar' : 'descontar';
+    const motivos = [];
+    if(status==='descontar'){
+      if(serialStatusIdx>=0 && normalizarTexto_(row[serialStatusIdx]).includes('incorret')) motivos.push('serial');
+      if(imeiStatusIdx>=0 && normalizarTexto_(row[imeiStatusIdx]).includes('incorret')) motivos.push('imei');
+      if(os30Idx>=0 && normalizarTexto_(row[os30Idx]).includes('incorret')) motivos.push('os30');
+      if(dupIdx>=0 && String(row[dupIdx]||'').trim()!=='') motivos.push('dup');
+      if(fenrirIdx>=0 && normalizarTexto_(row[fenrirIdx]).includes('incorret')) motivos.push('fenrir');
+    }
+    mapa[objectId] = {status, motivos: motivos.join(',')};
+  });
+  let conciliados = 0;
+  records.forEach(r=>{
+    if(r.tipo==='ticket' && r.objectId && mapa[r.objectId]!==undefined){
+      r.validado = mapa[r.objectId].status;
+      r.motivos = mapa[r.objectId].motivos;
+      conciliados++;
+    }
+  });
+  const semCorrespondencia = Object.keys(mapa).length - conciliados;
+  pendingValidacao = null;
+  document.getElementById('validacao-preview').style.display = 'none';
+  await persistAndSync();
+  renderAll();
+  alert(conciliados+' TA(s) conciliado(s) com sucesso.'+(semCorrespondencia>0 ? ' '+semCorrespondencia+' linha(s) da planilha não encontraram um TA correspondente no sistema (provavelmente importado antes do OBJECT_ID ser salvo — reimporte a planilha de consulta original com "substituir" para corrigir).' : ''));
+}
+
 function usuariosUnicos(){ return [...new Set(records.map(r => r.usuario).filter(u=>u!=='Geral'))].sort((a,b)=>a.localeCompare(b,'pt-BR')); }
 
 function getMonday(dateStr){
@@ -981,15 +1106,20 @@ function monthLabel(key){
   const nomes = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
   return nomes[parseInt(m,10)-1]+' de '+y;
 }
+function ehInvalido_(r){
+  if(r.validado==='pagar') return false;
+  if(r.validado==='descontar') return true;
+  return r.subtipo==='OS';
+}
 function daySummary(dayRecords){
   const orcTotal = dayRecords.filter(r=>r.tipo==='orcamento').reduce((s,r)=>s+r.valor,0);
   const tickets = dayRecords.filter(r=>r.tipo==='ticket');
-  const osCount = tickets.filter(r=>r.subtipo==='OS').length;
+  const osCount = tickets.filter(ehInvalido_).length;
   const taCount = tickets.length - osCount;
   const byUser = {};
   tickets.forEach(r=>{
     if(!byUser[r.usuario]) byUser[r.usuario] = {ta:0, os:0};
-    if(r.subtipo==='OS') byUser[r.usuario].os += 1; else byUser[r.usuario].ta += 1;
+    if(ehInvalido_(r)) byUser[r.usuario].os += 1; else byUser[r.usuario].ta += 1;
   });
   return {orcTotal, ticketsTotal: tickets.length, taCount, osCount, byUser};
 }
@@ -1055,7 +1185,7 @@ function renderGoalCards(){
   const faltaVal = Math.max(GOALS.validos - s.taCount, 0);
   const faltaValHtml = faltaVal>0 ? faltaVal : 'Meta atingida! 🎉';
 
-  const bigR = 42, smallR = 26;
+  const bigR = 42, smallR = 42;
   const bigC = 2*Math.PI*bigR, smallC = 2*Math.PI*smallR;
   const bigOffset = bigC - (Math.min(val.pct,100)/100)*bigC;
   const projPct = Math.min(val.projection/GOALS.validos*100,100);
@@ -1141,7 +1271,17 @@ function renderLancar(){
   document.getElementById('f-orc-valor').value = orcRec ? orcRec.valor.toLocaleString('pt-BR',{minimumFractionDigits:2, maximumFractionDigits:2}) : '';
   document.getElementById('orc-atual').textContent = orcRec ? '— atual em '+fmtDateBR(selectedDate)+': '+fmtBRL(orcRec.valor) : '— nada lançado para '+fmtDateBR(selectedDate);
 }
-function renderPeriodTable(elId, groups, labelFn){
+const MOTIVO_LABELS = {serial:'Serial incorreto', imei:'IMEI incorreto', os30:'OS há menos de 30 dias', dup:'Duplicidade em 30 dias', fenrir:'Sem Fenrir'};
+function analiseRecusas_(periodRecords){
+  const byUser = {};
+  periodRecords.filter(r=>r.tipo==='ticket' && r.validado==='descontar').forEach(r=>{
+    if(!byUser[r.usuario]) byUser[r.usuario] = {serial:0,imei:0,os30:0,dup:0,fenrir:0,total:0};
+    byUser[r.usuario].total++;
+    String(r.motivos||'').split(',').filter(Boolean).forEach(m=>{ if(byUser[r.usuario][m]!==undefined) byUser[r.usuario][m]++; });
+  });
+  return byUser;
+}
+function renderPeriodTable(elId, groups, labelFn, mostrarAnalise){
   const keys = Object.keys(groups).sort().reverse();
   const el = document.getElementById(elId);
   if(keys.length===0){ el.innerHTML = '<div class="empty">Nenhum lançamento ainda.</div>'; return; }
@@ -1157,9 +1297,34 @@ function renderPeriodTable(elId, groups, labelFn){
         </div>
       </div>
     `).join('') : '<div class="empty" style="padding:2px 0;">Nenhum consultor cadastrado</div>';
+
+    const temValidacao = mostrarAnalise && groups[k].some(r=>r.tipo==='ticket' && r.validado);
+    let analiseHtml = '';
+    if(mostrarAnalise && temValidacao){
+      const recusas = analiseRecusas_(groups[k]);
+      const consultoresComRecusa = Object.entries(recusas).sort((a,b)=>b[1].total-a[1].total);
+      if(consultoresComRecusa.length>0){
+        analiseHtml = `
+        <div class="reasons-panel">
+          <div class="reasons-title">Motivos de recusa (Samsung)</div>
+          <table class="reasons-table">
+            <thead><tr><th>Consultor</th><th>Serial</th><th>IMEI</th><th>OS &lt;30d</th><th>Duplic.</th><th>S/ Fenrir</th><th>Total</th></tr></thead>
+            <tbody>
+              ${consultoresComRecusa.map(([name,d])=>`
+                <tr>
+                  <td>${displayName(name)}</td>
+                  <td>${d.serial||'—'}</td><td>${d.imei||'—'}</td><td>${d.os30||'—'}</td><td>${d.dup||'—'}</td><td>${d.fenrir||'—'}</td>
+                  <td class="tot">${d.total}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>`;
+      }
+    }
+
     return `
       <div class="day-card">
-        <div class="dc-header">${labelFn(k)}</div>
+        <div class="dc-header">${labelFn(k)}${temValidacao?'<span class="badge-validado">✅ Validado</span>':''}</div>
         <div class="dc-grid">
           <div class="orc-card">
             <div class="lbl">Orçamento</div>
@@ -1180,6 +1345,7 @@ function renderPeriodTable(elId, groups, labelFn){
             <div class="dc-users" style="grid-template-columns:repeat(${Math.max(rows.length,1)},1fr)">${usersHtml}</div>
           </div>
         </div>
+        ${analiseHtml}
       </div>`;
   }).join('');
 }
@@ -1198,7 +1364,7 @@ function renderSemanal(){
   renderPeriodTable('semanal-body', groupBy(records,r=>getMonday(r.data)), (monday)=> 'W'+isoWeekNumber_(monday)+' · '+fmtDateBR(monday)+' – '+fmtDateBR(addDays(monday,6)));
 }
 function renderMensal(){
-  renderPeriodTable('mensal-body', groupBy(records,r=>monthKey(r.data)), (mk)=> monthLabel(mk).replace(/^./, c=>c.toUpperCase()));
+  renderPeriodTable('mensal-body', groupBy(records,r=>monthKey(r.data)), (mk)=> monthLabel(mk).replace(/^./, c=>c.toUpperCase()), true);
 }
 function renderHistorico(){
   const selU = document.getElementById('hist-usuario');
