@@ -76,6 +76,25 @@
   .goal-mini{background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;text-align:center;display:flex;flex-direction:column;justify-content:center;}
   .gc-stack{display:flex;flex-direction:column;justify-content:center;gap:6px;flex:1;}
   .gc-stack{display:flex;flex-direction:column;gap:8px;flex:1;}
+  .circles-wrap{display:flex;align-items:center;justify-content:center;gap:18px;margin:6px 0 10px;flex:1;}
+  .circle-wrap{position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .circle-wrap svg{transform:rotate(-90deg);}
+  .circle-wrap circle{fill:none;}
+  .circle-wrap .track{stroke:var(--surface-3);}
+  .circle-wrap .fill{stroke-linecap:round;transition:stroke-dashoffset .8s ease;}
+  .circle-wrap.big{width:104px;height:104px;}
+  .circle-wrap.big svg{width:104px;height:104px;}
+  .circle-wrap.big .track{stroke-width:8;}
+  .circle-wrap.big .fill{stroke:var(--accent);stroke-width:8;}
+  .circle-wrap.big .circle-num{font-family:'IBM Plex Mono';font-size:26px;font-weight:700;color:var(--text);}
+  .circle-wrap.big .circle-sub{font-size:10px;color:var(--text-faint);margin-top:1px;}
+  .circle-wrap.small{width:62px;height:62px;}
+  .circle-wrap.small svg{width:62px;height:62px;}
+  .circle-wrap.small .track{stroke-width:5;}
+  .circle-wrap.small .fill{stroke:var(--accent-2);stroke-width:5;opacity:.55;}
+  .circle-wrap.small .circle-num{font-family:'IBM Plex Mono';font-size:14px;font-weight:500;color:var(--text-faint);}
+  .circle-wrap.small .circle-sub{font-size:7.5px;color:var(--text-faint);margin-top:0;}
+  .circle-label{position:absolute;text-align:center;}
   .gc-stack .goal-mini{flex:1;text-align:left;display:flex;flex-direction:column;justify-content:center;padding:6px 14px;}
   .gc-stack .goal-mini .pm-row{display:flex;justify-content:space-between;align-items:baseline;}
   .gc-stack .goal-mini .goal-track.small{margin-top:6px;}
@@ -1036,6 +1055,12 @@ function renderGoalCards(){
   const faltaVal = Math.max(GOALS.validos - s.taCount, 0);
   const faltaValHtml = faltaVal>0 ? faltaVal : 'Meta atingida! 🎉';
 
+  const bigR = 42, smallR = 26;
+  const bigC = 2*Math.PI*bigR, smallC = 2*Math.PI*smallR;
+  const bigOffset = bigC - (Math.min(val.pct,100)/100)*bigC;
+  const projPct = Math.min(val.projection/GOALS.validos*100,100);
+  const smallOffset = smallC - (projPct/100)*smallC;
+
   document.getElementById('goal-cards').innerHTML = `
     <div class="goal-card orc-gradient">
       <div class="gc-head">
@@ -1055,15 +1080,32 @@ function renderGoalCards(){
     </div>
     <div class="goal-card">
       <div class="gc-head">
-        <div><div class="gc-title">TAs válidos — ${mesLabel}</div><div class="gc-value">${s.taCount}<span class="gc-goal-suffix">/${GOALS.validos}</span></div></div>
+        <div><div class="gc-title">TAs válidos — ${mesLabel}</div></div>
         <div class="gc-pct">${val.pct.toFixed(0)}%</div>
       </div>
-      <div class="goal-track"><div class="goal-fill valid" style="width:0%" data-target="${Math.min(val.pct,100)}"></div></div>
-      <div class="gc-stack">
-        <div class="goal-mini proj-mini">
-          <div class="pm-row"><span class="lbl">Projeção</span><span class="val">${Math.round(val.projection)}</span></div>
-          <div class="goal-track small"><div class="goal-fill valid" style="width:0%" data-target="${Math.min(val.projection/GOALS.validos*100,100)}"></div></div>
+      <div class="circles-wrap">
+        <div class="circle-wrap big">
+          <svg viewBox="0 0 100 100">
+            <circle class="track" cx="50" cy="50" r="${bigR}"></circle>
+            <circle class="fill" cx="50" cy="50" r="${bigR}" stroke-dasharray="${bigC}" style="stroke-dashoffset:${bigC}" data-circle-target="${bigOffset}"></circle>
+          </svg>
+          <div class="circle-label">
+            <div class="circle-num">${s.taCount}</div>
+            <div class="circle-sub">/${GOALS.validos}</div>
+          </div>
         </div>
+        <div class="circle-wrap small">
+          <svg viewBox="0 0 100 100">
+            <circle class="track" cx="50" cy="50" r="${smallR}"></circle>
+            <circle class="fill" cx="50" cy="50" r="${smallR}" stroke-dasharray="${smallC}" style="stroke-dashoffset:${smallC}" data-circle-target="${smallOffset}"></circle>
+          </svg>
+          <div class="circle-label">
+            <div class="circle-num">${Math.round(val.projection)}</div>
+            <div class="circle-sub">projeção</div>
+          </div>
+        </div>
+      </div>
+      <div class="gc-stack">
         <div class="goal-mini falta-mini">
           <div class="pm-row"><span class="lbl">Falta p/ meta</span><span class="val">${faltaValHtml}</span></div>
         </div>
@@ -1087,6 +1129,9 @@ function animateBars_(containerId){
     requestAnimationFrame(()=>{
       document.querySelectorAll('#'+containerId+' [data-target]').forEach(el=>{
         el.style.width = el.dataset.target + '%';
+      });
+      document.querySelectorAll('#'+containerId+' [data-circle-target]').forEach(el=>{
+        el.style.strokeDashoffset = el.dataset.circleTarget;
       });
     });
   });
