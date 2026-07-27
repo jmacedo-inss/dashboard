@@ -425,6 +425,7 @@
         <div class="field"><label>Nível</label>
           <select id="usf-nivel" onchange="toggleUnidadeUsuarioField()">
             <option value="consultor">Consultor L1</option>
+            <option value="consultor_l2">Consultor L2</option>
             <option value="admin">Admin</option>
           </select>
         </div>
@@ -623,7 +624,11 @@ let consultorNomeMap = {};
 function displayName(usuario){ return consultorNomeMap[usuario] || USER_NAME_MAP_FALLBACK[usuario] || usuario; }
 let usuariosTodosCache = [];
 function ehConsultor_(nivel){ return nivel === 'consultor' || nivel === 'comum'; }
-function nivelLabel_(nivel){ return nivel === 'admin' ? 'Admin' : 'Consultor L1'; }
+function nivelLabel_(nivel){
+  if(nivel === 'admin') return 'Admin';
+  if(nivel === 'consultor_l2') return 'Consultor L2';
+  return 'Consultor L1';
+}
 async function atualizarMapaConsultores_(){
   if(!config.sheetsUrl) return;
   try{
@@ -1571,7 +1576,7 @@ function renderUserChip(){
   document.getElementById('user-chip-nome').textContent = session.nome;
   document.getElementById('user-avatar').textContent = (session.nome||'?').trim().charAt(0).toUpperCase();
   document.getElementById('user-dropdown-nome').textContent = session.nome;
-  document.getElementById('user-dropdown-nivel').textContent = session.nivel === 'admin' ? 'Administrador' : 'Consultor L1';
+  document.getElementById('user-dropdown-nivel').textContent = session.nivel === 'admin' ? 'Administrador' : nivelLabel_(session.nivel);
   document.getElementById('btn-unidades').hidden = session.nivel !== 'admin';
   document.getElementById('btn-usuarios').hidden = session.nivel !== 'admin';
 }
