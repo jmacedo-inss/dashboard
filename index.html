@@ -76,19 +76,19 @@
   .goal-mini{background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;text-align:center;display:flex;flex-direction:column;justify-content:center;}
   .gc-stack{display:flex;flex-direction:column;justify-content:center;gap:6px;flex:1;}
   .gc-stack{display:flex;flex-direction:column;gap:8px;flex:1;}
-  .circles-wrap{display:flex;align-items:center;justify-content:center;gap:14px;margin:6px 0 10px;flex:1;flex-wrap:wrap;}
-  .circle-wrap{position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .circles-wrap{display:flex;align-items:center;justify-content:center;gap:2px;margin:6px 0 10px;flex:1;flex-wrap:wrap;}
+  .circle-wrap{position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:50%;}
   .circle-wrap svg{transform:rotate(-90deg);}
   .circle-wrap circle{fill:none;}
   .circle-wrap .track{stroke:var(--surface-3);}
   .circle-wrap .fill{stroke-linecap:round;transition:stroke-dashoffset .8s ease;}
-  .circle-wrap.big{width:150px;height:150px;}
+  .circle-wrap.big{width:150px;height:150px;z-index:2;background:var(--surface);box-shadow:0 6px 14px rgba(16,24,39,.16);}
   .circle-wrap.big svg{width:150px;height:150px;}
   .circle-wrap.big .track{stroke-width:9;}
   .circle-wrap.big .fill{stroke:var(--accent);stroke-width:9;}
   .circle-wrap.big .circle-num{font-family:'IBM Plex Mono';font-size:36px;font-weight:700;color:var(--text);}
   .circle-wrap.big .circle-sub{font-size:12px;color:var(--text-faint);margin-top:2px;}
-  .circle-wrap.small{width:120px;height:120px;}
+  .circle-wrap.small{width:120px;height:120px;z-index:1;margin-left:-22px;background:var(--surface);box-shadow:0 6px 14px rgba(16,24,39,.14);}
   .circle-wrap.small svg{width:120px;height:120px;}
   .circle-wrap.small .track{stroke-width:8;}
   .circle-wrap.small .fill{stroke:var(--accent-2);stroke-width:8;opacity:.65;}
@@ -1253,7 +1253,7 @@ function renderGoalCards(){
         </div>
       </div>
       <div class="goal-extra">
-        <div class="goal-extra-item"><div class="lbl">TAs totais (histórico)</div><div class="val">${allTime.ticketsTotal}</div></div>
+        <div class="goal-extra-item"><div class="lbl">TAs totais (mês)</div><div class="val">${s.ticketsTotal}</div></div>
         <div class="goal-extra-item"><div class="lbl">Transf. p/ OS (histórico)</div><div class="val">${allTime.osCount}</div></div>
         <div class="goal-extra-item"><div class="lbl">Dias registrados</div><div class="val">${diasRegistrados}</div></div>
       </div>
