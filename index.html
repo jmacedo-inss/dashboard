@@ -76,24 +76,26 @@
   .goal-mini{background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;text-align:center;display:flex;flex-direction:column;justify-content:center;}
   .gc-stack{display:flex;flex-direction:column;justify-content:center;gap:6px;flex:1;}
   .gc-stack{display:flex;flex-direction:column;gap:8px;flex:1;}
-  .circles-wrap{display:flex;align-items:center;justify-content:center;gap:2px;margin:6px 0 10px;flex:1;flex-wrap:wrap;}
+  .tas-body{display:flex;gap:16px;align-items:center;flex:1;margin-top:4px;}
+  .circles-col{display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0;}
+  .tas-side{display:flex;flex-direction:column;gap:8px;flex:1;justify-content:center;min-width:0;}
   .circle-wrap{position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:50%;}
   .circle-wrap svg{transform:rotate(-90deg);}
   .circle-wrap circle{fill:none;}
   .circle-wrap .track{stroke:var(--surface-3);}
   .circle-wrap .fill{stroke-linecap:round;transition:stroke-dashoffset .8s ease;}
-  .circle-wrap.big{width:150px;height:150px;z-index:2;background:var(--surface);box-shadow:0 6px 14px rgba(16,24,39,.16);}
-  .circle-wrap.big svg{width:150px;height:150px;}
-  .circle-wrap.big .track{stroke-width:9;}
-  .circle-wrap.big .fill{stroke:var(--accent);stroke-width:9;}
-  .circle-wrap.big .circle-num{font-family:'IBM Plex Mono';font-size:36px;font-weight:700;color:var(--text);}
-  .circle-wrap.big .circle-sub{font-size:12px;color:var(--text-faint);margin-top:2px;}
-  .circle-wrap.small{width:120px;height:120px;z-index:1;margin-left:-22px;background:var(--surface);box-shadow:0 6px 14px rgba(16,24,39,.14);}
-  .circle-wrap.small svg{width:120px;height:120px;}
-  .circle-wrap.small .track{stroke-width:8;}
-  .circle-wrap.small .fill{stroke:var(--accent-2);stroke-width:8;opacity:.65;}
-  .circle-wrap.small .circle-num{font-family:'IBM Plex Mono';font-size:28px;font-weight:600;color:var(--text-faint);}
-  .circle-wrap.small .circle-sub{font-size:11px;color:var(--text-faint);margin-top:1px;text-transform:uppercase;letter-spacing:.05em;}
+  .circle-wrap.big{width:75px;height:75px;z-index:2;}
+  .circle-wrap.big svg{width:75px;height:75px;}
+  .circle-wrap.big .track{stroke-width:6;}
+  .circle-wrap.big .fill{stroke:var(--accent);stroke-width:6;}
+  .circle-wrap.big .circle-num{font-family:'IBM Plex Mono';font-size:17px;font-weight:700;color:var(--text);}
+  .circle-wrap.big .circle-sub{font-size:8.5px;color:var(--text-faint);margin-top:1px;}
+  .circle-wrap.small{width:75px;height:75px;z-index:1;}
+  .circle-wrap.small svg{width:75px;height:75px;}
+  .circle-wrap.small .track{stroke-width:6;}
+  .circle-wrap.small .fill{stroke:var(--accent-2);stroke-width:6;opacity:.65;}
+  .circle-wrap.small .circle-num{font-family:'IBM Plex Mono';font-size:17px;font-weight:600;color:var(--text-faint);}
+  .circle-wrap.small .circle-sub{font-size:8.5px;color:var(--text-faint);margin-top:1px;text-transform:uppercase;letter-spacing:.05em;}
   .circle-label{position:absolute;text-align:center;}
   .gc-stack .goal-mini{flex:1;text-align:left;display:flex;flex-direction:column;justify-content:center;padding:6px 14px;}
   .gc-stack .goal-mini .pm-row{display:flex;justify-content:space-between;align-items:baseline;}
@@ -181,6 +183,9 @@
   .reasons-table td:first-child{text-align:left;color:var(--text);font-family:'Manrope';font-weight:600;}
   .reasons-table td.tot{color:var(--rose);font-weight:700;}
   .reasons-table tr:last-child td{border-bottom:none;}
+  .fee-btn-wrap{display:flex;justify-content:flex-end;margin-top:10px;}
+  .btn-fee{background:linear-gradient(135deg, var(--accent), var(--accent-2));color:#fff;border:none;border-radius:8px;padding:7px 15px;font-family:'Manrope';font-weight:700;font-size:12px;cursor:pointer;box-shadow:0 4px 10px rgba(var(--accent-rgb),.32);transition:transform .15s ease, box-shadow .15s ease;}
+  .btn-fee:hover{transform:translateY(-1px);box-shadow:0 6px 14px rgba(var(--accent-rgb),.4);}
   .pagination{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:16px;flex-wrap:wrap;}
   .page-btn{background:var(--surface-2);border:1px solid var(--border);color:var(--text-dim);border-radius:7px;min-width:30px;height:30px;padding:0 8px;font-family:'IBM Plex Mono';font-size:12.5px;cursor:pointer;transition:border-color .15s,color .15s;}
   .page-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent);}
@@ -374,6 +379,42 @@
           <button type="submit" class="primary">Salvar</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-fee" style="display:none">
+    <div class="modal-box wide">
+      <h3 style="margin:0 0 4px;font-family:'Outfit';font-size:15px;">Gerar FEE</h3>
+      <p class="hint" id="fee-mes-label" style="margin-bottom:14px;"></p>
+      <div class="admin-form">
+        <div class="field"><label>Garantia (LP) — Valor (R$)</label><input type="text" inputmode="decimal" id="fee-lp-valor" class="mono" placeholder="0,00" oninput="maskCurrency(this)"></div>
+        <div class="field"><label>Garantia (LP) — Quantidade</label><input type="number" id="fee-lp-qty" class="mono" min="0"></div>
+        <div class="full field"><label>Quantidade de OSs (Fora de Garantia)</label><input type="number" id="fee-ow-qty" class="mono" min="0"></div>
+        <div class="full field">
+          <label>Planilha de Ordens de Serviço</label>
+          <div class="upload-box" style="padding:10px;">
+            <div class="upload-row">
+              <label for="fee-os-file" class="upload-btn"><span class="ic">⇧</span> Escolher planilha</label>
+              <input type="file" id="fee-os-file" accept=".xlsx,.xls,.csv" onchange="handleFeeFile_(event,'os')">
+              <span id="fee-os-filename" class="upload-filename">Nenhum arquivo selecionado</span>
+            </div>
+          </div>
+        </div>
+        <div class="full field">
+          <label>Planilha de validação Samsung (GD-TA)</label>
+          <div class="upload-box" style="padding:10px;">
+            <div class="upload-row">
+              <label for="fee-gdta-file" class="upload-btn"><span class="ic">⇧</span> Escolher planilha</label>
+              <input type="file" id="fee-gdta-file" accept=".xlsx,.xls,.csv" onchange="handleFeeFile_(event,'gdta')">
+              <span id="fee-gdta-filename" class="upload-filename">Nenhum arquivo selecionado</span>
+            </div>
+          </div>
+        </div>
+        <div class="full" style="display:flex;gap:8px;">
+          <button type="button" class="primary" onclick="gerarFee()">Gerar arquivo</button>
+          <button type="button" class="ghost" onclick="fecharModal('modal-fee')" style="margin-left:auto;">Fechar</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1225,37 +1266,41 @@ function renderGoalCards(){
         <div><div class="gc-title">TAs válidos — ${mesLabel}</div></div>
         <div class="gc-pct">${val.pct.toFixed(0)}%</div>
       </div>
-      <div class="circles-wrap">
-        <div class="circle-wrap big">
-          <svg viewBox="0 0 100 100">
-            <circle class="track" cx="50" cy="50" r="${bigR}"></circle>
-            <circle class="fill" cx="50" cy="50" r="${bigR}" stroke-dasharray="${bigC}" style="stroke-dashoffset:${bigC}" data-circle-target="${bigOffset}"></circle>
-          </svg>
-          <div class="circle-label">
-            <div class="circle-num">${s.taCount}</div>
-            <div class="circle-sub">/${GOALS.validos}</div>
+      <div class="tas-body">
+        <div class="circles-col">
+          <div class="circle-wrap big">
+            <svg viewBox="0 0 100 100">
+              <circle class="track" cx="50" cy="50" r="${bigR}"></circle>
+              <circle class="fill" cx="50" cy="50" r="${bigR}" stroke-dasharray="${bigC}" style="stroke-dashoffset:${bigC}" data-circle-target="${bigOffset}"></circle>
+            </svg>
+            <div class="circle-label">
+              <div class="circle-num">${s.taCount}</div>
+              <div class="circle-sub">/${GOALS.validos}</div>
+            </div>
+          </div>
+          <div class="circle-wrap small">
+            <svg viewBox="0 0 100 100">
+              <circle class="track" cx="50" cy="50" r="${smallR}"></circle>
+              <circle class="fill" cx="50" cy="50" r="${smallR}" stroke-dasharray="${smallC}" style="stroke-dashoffset:${smallC}" data-circle-target="${smallOffset}"></circle>
+            </svg>
+            <div class="circle-label">
+              <div class="circle-num">${Math.round(val.projection)}</div>
+              <div class="circle-sub">projeção</div>
+            </div>
           </div>
         </div>
-        <div class="circle-wrap small">
-          <svg viewBox="0 0 100 100">
-            <circle class="track" cx="50" cy="50" r="${smallR}"></circle>
-            <circle class="fill" cx="50" cy="50" r="${smallR}" stroke-dasharray="${smallC}" style="stroke-dashoffset:${smallC}" data-circle-target="${smallOffset}"></circle>
-          </svg>
-          <div class="circle-label">
-            <div class="circle-num">${Math.round(val.projection)}</div>
-            <div class="circle-sub">projeção</div>
+        <div class="tas-side">
+          <div class="gc-stack">
+            <div class="goal-mini falta-mini">
+              <div class="pm-row"><span class="lbl">Falta p/ meta</span><span class="val">${faltaValHtml}</span></div>
+            </div>
+          </div>
+          <div class="goal-extra">
+            <div class="goal-extra-item"><div class="lbl">TAs totais (mês)</div><div class="val">${s.ticketsTotal}</div></div>
+            <div class="goal-extra-item"><div class="lbl">Transf. p/ OS (histórico)</div><div class="val">${allTime.osCount}</div></div>
+            <div class="goal-extra-item"><div class="lbl">Dias registrados</div><div class="val">${diasRegistrados}</div></div>
           </div>
         </div>
-      </div>
-      <div class="gc-stack">
-        <div class="goal-mini falta-mini">
-          <div class="pm-row"><span class="lbl">Falta p/ meta</span><span class="val">${faltaValHtml}</span></div>
-        </div>
-      </div>
-      <div class="goal-extra">
-        <div class="goal-extra-item"><div class="lbl">TAs totais (mês)</div><div class="val">${s.ticketsTotal}</div></div>
-        <div class="goal-extra-item"><div class="lbl">Transf. p/ OS (histórico)</div><div class="val">${allTime.osCount}</div></div>
-        <div class="goal-extra-item"><div class="lbl">Dias registrados</div><div class="val">${diasRegistrados}</div></div>
       </div>
     </div>
     <div class="goal-card rank-card">
@@ -1358,6 +1403,7 @@ function renderPeriodTable(elId, groups, labelFn, mostrarAnalise){
           </div>
         </div>
         ${analiseHtml}
+        ${temValidacao ? `<div class="fee-btn-wrap"><button class="btn-fee" onclick="abrirModalFee('${k}')">Gerar FEE</button></div>` : ''}
       </div>`;
   }).join('');
 }
@@ -1674,6 +1720,90 @@ function sair(){
   location.reload();
 }
 function fecharModal(id){ document.getElementById(id).style.display = 'none'; }
+
+let feeMes = null;
+let feeOsData = null;
+let feeGdtaData = null;
+function abrirModalFee(mk){
+  feeMes = mk;
+  feeOsData = null;
+  feeGdtaData = null;
+  document.getElementById('fee-mes-label').textContent = 'Referente a: '+monthLabel(mk);
+  document.getElementById('fee-lp-valor').value = '';
+  document.getElementById('fee-lp-qty').value = '';
+  document.getElementById('fee-ow-qty').value = '';
+  document.getElementById('fee-os-filename').textContent = 'Nenhum arquivo selecionado';
+  document.getElementById('fee-gdta-filename').textContent = 'Nenhum arquivo selecionado';
+  document.getElementById('modal-fee').style.display = 'flex';
+}
+function handleFeeFile_(ev, tipo){
+  const file = ev.target.files[0];
+  if(!file) return;
+  document.getElementById(tipo==='os' ? 'fee-os-filename' : 'fee-gdta-filename').textContent = file.name;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try{
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, {type:'array', cellDates:true});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const aoa = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+      if(tipo==='os') feeOsData = aoa; else feeGdtaData = aoa;
+    }catch(err){
+      alert('Não consegui ler essa planilha. Confira se o arquivo é .xlsx, .xls ou .csv válido.');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  ev.target.value = '';
+}
+function mesAnoFeeLabel_(mk){
+  const meses = ['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO'];
+  const [yy,mm] = mk.split('-');
+  return meses[parseInt(mm,10)-1]+'_'+yy;
+}
+function extrairAscCode_(aoa){
+  if(!aoa || aoa.length<2) return '';
+  const headers = aoa[0].map(h=>String(h).trim());
+  let idx = findColumn_(headers, 'zzasc_code');
+  if(idx<0) idx = findColumn_(headers, 'asc code');
+  if(idx<0) return '';
+  return String(aoa[1][idx]||'').trim();
+}
+function gerarFee(){
+  if(!feeMes) return;
+  const qtyLP = parseInt(document.getElementById('fee-lp-qty').value,10) || 0;
+  const valorLP = parseCurrencyInput(document.getElementById('fee-lp-valor').value);
+  const qtyOW = parseInt(document.getElementById('fee-ow-qty').value,10) || 0;
+
+  const s = daySummary(records.filter(r=>monthKey(normalizeDateStr_(r.data))===feeMes));
+  const qtyGdTa = s.taCount;
+  const valorGdTa = qtyGdTa*38;
+  const valorOW = s.orcTotal;
+  const totalQty = qtyLP+qtyGdTa+qtyOW;
+  const totalValor = valorLP+valorGdTa+valorOW;
+  const repasse = totalValor*0.03;
+  const [yy,mm] = feeMes.split('-').map(Number);
+  const dataRef = new Date(yy, mm-1, 1);
+
+  const resumoAoa = [
+    ['Tipo de OS','Qty', dataRef],
+    ['Garantia (LP) - Mão-de-Obra', qtyLP, valorLP],
+    ['GD TA - Mão-de-Obra', qtyGdTa, valorGdTa],
+    ['Fora de Garantia (OW) - $ CARE', qtyOW, valorOW],
+    ['Total Receitas', totalQty, totalValor],
+    ['Repasse Allied (3%)', '', repasse]
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(resumoAoa), 'RESUMO');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(feeOsData || [['Nenhuma planilha de Ordens de Serviço foi enviada']]), 'Ordens de Serviço ');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(feeGdtaData || [['Nenhuma planilha de validação foi enviada']]), 'GD-TA');
+
+  const asc = extrairAscCode_(feeGdtaData) || extrairAscCode_(feeOsData);
+  const nomeArquivo = (asc ? asc+'_-_' : '')+'Relatório_de_Faturamento_Mensal_-_'+mesAnoFeeLabel_(feeMes)+'.xlsx';
+  XLSX.writeFile(wb, nomeArquivo);
+  fecharModal('modal-fee');
+}
+
 
 /* ---- Gestão de unidades (admin) ---- */
 async function abrirModalUnidades(){
