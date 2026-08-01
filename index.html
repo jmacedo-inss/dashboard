@@ -1739,7 +1739,7 @@ function abrirModalSuspeitos(mk){
     const linhas = lista.map(([cliente, modelos])=>{
       const contagem = {};
       modelos.forEach(m=>{ contagem[m] = (contagem[m]||0)+1; });
-      const modelosTexto = Object.entries(contagem).map(([m,c])=>m+(c>1?' × '+c:'')).join(', ');
+      const modelosTexto = Object.entries(contagem).map(([m,c])=>`<div>${m}${c>1?' × '+c:''}</div>`).join('');
       return `<tr>
         <td class="mono">${cliente}<span class="suspeito-total"> (${modelos.length})</span></td>
         <td>${modelosTexto}</td>
