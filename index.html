@@ -636,11 +636,11 @@ const FEE_TEMPLATE_B64 = 'UEsDBBQABgAIAAAAIQBlgYtCswEAAJ0IAAATAAgCW0NvbnRlbnRfVH
 const DEFAULT_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwUPiM0CxhMccg4-Mlw0onWGvWfh_BPFkvSBuCFccxPGZTV0PLDEd6b1iM8VYptX3jJ/exec';
 let records = [];
 let config = {sheetsUrl: DEFAULT_SHEETS_URL};
+let relogioOffsetMs = 0;
 let selectedDate = todayStr();
 let session = {id:'', nome:'', usuario:'', nivel:'', unidadeId:'', unidades:[]};
 let unidadesTodasCache = [];
 let pendingImport = null;
-let relogioOffsetMs = 0;
 function agoraServidor(){ return new Date(Date.now() + relogioOffsetMs); }
 async function sincronizarRelogioServidor_(){
   if(!config.sheetsUrl) return;
@@ -2081,10 +2081,12 @@ async function salvarUsuario(ev){
 
 (async function init(){
   await loadConfig();
-  await sincronizarRelogioServidor_();
-  selectedDate = todayStr();
-  const fDataEl = document.getElementById('f-data');
-  if(fDataEl) fDataEl.value = selectedDate;
+  sincronizarRelogioServidor_().then(()=>{
+    selectedDate = todayStr();
+    const fDataEl = document.getElementById('f-data');
+    if(fDataEl) fDataEl.value = selectedDate;
+    if(session.unidadeId) renderAll();
+  });
   if(loadSession_()){
     await mostrarApp();
   }
