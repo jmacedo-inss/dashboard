@@ -165,11 +165,12 @@
   .badge-validado{background:rgba(14,163,126,.14);color:var(--teal);font-family:'Manrope';font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:.02em;}
   .badge-suspeito{background:rgba(226,59,76,.13);color:var(--rose);font-family:'Manrope';font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:.02em;cursor:pointer;transition:background .15s ease;}
   .badge-suspeito:hover{background:rgba(226,59,76,.22);}
-  .suspeito-item{background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:8px;}
-  .suspeito-cliente{font-weight:700;font-size:13px;color:var(--text);margin-bottom:4px;}
-  .suspeito-total{font-weight:500;color:var(--rose);font-size:11.5px;}
-  .suspeito-modelos{margin:0;padding-left:18px;font-size:12px;color:var(--text-dim);}
-  .suspeito-modelos li{margin-bottom:2px;}
+  .suspeitos-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  .suspeitos-table th{text-align:left;color:var(--text-faint);font-weight:500;font-size:10px;text-transform:uppercase;padding:6px 10px;border-bottom:1px solid var(--border);}
+  .suspeitos-table td{padding:8px 10px;border-bottom:1px solid var(--border-soft);vertical-align:top;color:var(--text-dim);}
+  .suspeitos-table td:first-child{font-weight:700;color:var(--text);white-space:nowrap;width:1%;}
+  .suspeitos-table tr:last-child td{border-bottom:none;}
+  .suspeito-total{font-weight:500;color:var(--rose);font-size:11px;}
   .reasons-panel{margin-top:10px;padding-top:10px;border-top:1px dashed var(--border-soft);}
   .reasons-title{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:6px;}
   .reasons-table{width:100%;border-collapse:collapse;font-size:11.5px;}
@@ -1732,15 +1733,23 @@ function fecharModal(id){ document.getElementById(id).style.display = 'none'; }
 function abrirModalSuspeitos(mk){
   const lista = suspeitosPorMes[mk] || [];
   const body = document.getElementById('suspeitos-body');
-  body.innerHTML = lista.length ? lista.map(([cliente, modelos])=>{
-    const contagem = {};
-    modelos.forEach(m=>{ contagem[m] = (contagem[m]||0)+1; });
-    const modelosHtml = Object.entries(contagem).map(([m,c])=>`<li>${m}${c>1?' × '+c:''}</li>`).join('');
-    return `<div class="suspeito-item">
-      <div class="suspeito-cliente">Cliente ${cliente} <span class="suspeito-total">(${modelos.length} registros no mês)</span></div>
-      <ul class="suspeito-modelos">${modelosHtml}</ul>
-    </div>`;
-  }).join('') : '<div class="empty">Nenhum registro suspeito.</div>';
+  if(!lista.length){
+    body.innerHTML = '<div class="empty">Nenhum registro suspeito.</div>';
+  } else {
+    const linhas = lista.map(([cliente, modelos])=>{
+      const contagem = {};
+      modelos.forEach(m=>{ contagem[m] = (contagem[m]||0)+1; });
+      const modelosTexto = Object.entries(contagem).map(([m,c])=>m+(c>1?' × '+c:'')).join(', ');
+      return `<tr>
+        <td class="mono">${cliente}<span class="suspeito-total"> (${modelos.length})</span></td>
+        <td>${modelosTexto}</td>
+      </tr>`;
+    }).join('');
+    body.innerHTML = `<table class="suspeitos-table">
+      <thead><tr><th>Cliente</th><th>Aparelhos registrados</th></tr></thead>
+      <tbody>${linhas}</tbody>
+    </table>`;
+  }
   document.getElementById('modal-suspeitos').style.display = 'flex';
 }
 
