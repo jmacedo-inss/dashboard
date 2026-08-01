@@ -1338,7 +1338,8 @@ function clientesSuspeitos_(periodRecords){
   });
   return Object.entries(porCliente).filter(([,modelos])=>modelos.length>3);
 }
-function renderPeriodTable(elId, groups, labelFn, mostrarAnalise){
+function renderPeriodTable(elId, groups, labelFn, mostrarAnalise, viewPrefix){
+  viewPrefix = viewPrefix || 'x';
   const keys = Object.keys(groups).sort().reverse();
   const el = document.getElementById(elId);
   if(keys.length===0){ el.innerHTML = '<div class="empty">Nenhum lançamento ainda.</div>'; return; }
@@ -1380,12 +1381,11 @@ function renderPeriodTable(elId, groups, labelFn, mostrarAnalise){
     }
 
     let suspeitosTag = '';
-    if(mostrarAnalise){
-      const suspeitos = clientesSuspeitos_(groups[k]);
-      if(suspeitos.length>0){
-        suspeitosPorMes[k] = suspeitos;
-        suspeitosTag = `<span class="badge-suspeito" onclick="abrirModalSuspeitos('${k}')">${suspeitos.length} registro${suspeitos.length>1?'s':''} suspeito${suspeitos.length>1?'s':''}</span>`;
-      }
+    const suspeitos = clientesSuspeitos_(groups[k]);
+    if(suspeitos.length>0){
+      const chaveSuspeito = viewPrefix+'|'+k;
+      suspeitosPorMes[chaveSuspeito] = suspeitos;
+      suspeitosTag = `<span class="badge-suspeito" onclick="abrirModalSuspeitos('${chaveSuspeito}')">${suspeitos.length} registro${suspeitos.length>1?'s':''} suspeito${suspeitos.length>1?'s':''}</span>`;
     }
 
     return `
@@ -1438,7 +1438,7 @@ function renderDiario(){
   const pageKeys = keys.slice(startIdx, startIdx+DIARIO_PAGE_SIZE);
   const pageGroups = {};
   pageKeys.forEach(k=>{ pageGroups[k] = allGroups[k]; });
-  renderPeriodTable('diario-body', pageGroups, (k)=> weekdayShort_(k)+', '+fmtDateBR(k));
+  renderPeriodTable('diario-body', pageGroups, (k)=> weekdayShort_(k)+', '+fmtDateBR(k), false, 'dia');
   renderPaginacaoDiario_(diarioPage, totalPages);
 }
 function irParaPaginaDiario(p){
@@ -1471,11 +1471,10 @@ function renderPaginacaoDiario_(current, total){
   el.innerHTML = html;
 }
 function renderSemanal(){
-  renderPeriodTable('semanal-body', groupBy(records,r=>getMonday(r.data)), (monday)=> 'W'+isoWeekNumber_(monday)+' · '+fmtDateBR(monday)+' – '+fmtDateBR(addDays(monday,6)));
+  renderPeriodTable('semanal-body', groupBy(records,r=>getMonday(r.data)), (monday)=> 'W'+isoWeekNumber_(monday)+' · '+fmtDateBR(monday)+' – '+fmtDateBR(addDays(monday,6)), false, 'sem');
 }
 function renderMensal(){
-  suspeitosPorMes = {};
-  renderPeriodTable('mensal-body', groupBy(records,r=>monthKey(r.data)), (mk)=> monthLabel(mk).replace(/^./, c=>c.toUpperCase()), true);
+  renderPeriodTable('mensal-body', groupBy(records,r=>monthKey(r.data)), (mk)=> monthLabel(mk).replace(/^./, c=>c.toUpperCase()), true, 'mes');
 }
 function renderHistorico(){
   const selU = document.getElementById('hist-usuario');
@@ -1541,7 +1540,7 @@ async function excluirSelecionadosHist(){
   await persistAndSync();
   renderAll();
 }
-function renderAll(){ renderGoalCards(); renderLancar(); renderDiario(); renderSemanal(); renderMensal(); renderHistorico(); }
+function renderAll(){ suspeitosPorMes = {}; renderGoalCards(); renderLancar(); renderDiario(); renderSemanal(); renderMensal(); renderHistorico(); }
 
 function exportExcel(){
   const wb = XLSX.utils.book_new();
