@@ -1208,8 +1208,7 @@ function renderGoalCards(){
   const monthRecs = records.filter(r=>monthKey(normalizeDateStr_(r.data))===info.mk);
   const s = daySummary(monthRecs);
   const mesLabel = monthLabel(info.mk);
-  const allTime = daySummary(records);
-  const diasRegistrados = Object.keys(groupBy(records,r=>r.data)).length;
+  const diasRegistrados = Object.keys(groupBy(monthRecs,r=>r.data)).length;
 
   const orc = monthProgress(s.orcTotal, GOALS.orcamento, info.daysElapsed, info.daysInMonth);
   const val = monthProgress(s.taCount, GOALS.validos, info.daysElapsed, info.daysInMonth);
@@ -1265,7 +1264,7 @@ function renderGoalCards(){
       <div class="stats-2x2">
         <div class="goal-extra-item"><div class="lbl">Falta p/ meta</div><div class="val">${faltaValHtml}</div></div>
         <div class="goal-extra-item"><div class="lbl">TAs totais (mês)</div><div class="val">${s.ticketsTotal}</div></div>
-        <div class="goal-extra-item"><div class="lbl">Transf. p/ OS (histórico)</div><div class="val">${allTime.osCount}</div></div>
+        <div class="goal-extra-item"><div class="lbl">Transf. p/ OS</div><div class="val">${s.osCount}</div></div>
         <div class="goal-extra-item"><div class="lbl">Dias registrados</div><div class="val">${diasRegistrados}</div></div>
       </div>
     </div>
