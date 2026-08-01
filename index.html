@@ -640,9 +640,21 @@ let selectedDate = todayStr();
 let session = {id:'', nome:'', usuario:'', nivel:'', unidadeId:'', unidades:[]};
 let unidadesTodasCache = [];
 let pendingImport = null;
+let relogioOffsetMs = 0;
+function agoraServidor(){ return new Date(Date.now() + relogioOffsetMs); }
+async function sincronizarRelogioServidor_(){
+  if(!config.sheetsUrl) return;
+  try{
+    const res = await fetch(config.sheetsUrl+'?action=horario');
+    const data = await res.json();
+    if(data && data.agora){
+      relogioOffsetMs = new Date(data.agora).getTime() - Date.now();
+    }
+  }catch(e){ /* mantém offset 0 (usa relógio local) em caso de falha */ }
+}
 
 function todayStr(){
-  const d = new Date();
+  const d = agoraServidor();
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
 const USER_NAME_MAP_FALLBACK = {
@@ -1182,18 +1194,9 @@ function aplicarMetasUnidade_(unidade){
 }
 
 function referenceInfo_(){
-  const validDate = /^\d{4}-\d{2}-\d{2}$/;
-  const ticketDates = records.filter(r=>r.tipo==='ticket').map(r=>normalizeDateStr_(r.data)).filter(d=>validDate.test(d));
-  const allDates = ticketDates.length>0 ? ticketDates : records.map(r=>normalizeDateStr_(r.data)).filter(d=>validDate.test(d));
-  if(allDates.length===0){
-    const t = todayStr();
-    return { mk: monthKey(t), daysElapsed: parseInt(t.slice(8,10),10), daysInMonth: new Date(parseInt(t.slice(0,4),10), parseInt(t.slice(5,7),10), 0).getDate() };
-  }
-  const maxStr = allDates.reduce((max,d)=> d>max?d:max, allDates[0]);
-  const yy = parseInt(maxStr.slice(0,4),10);
-  const mm = parseInt(maxStr.slice(5,7),10);
-  const dd = parseInt(maxStr.slice(8,10),10);
-  return { mk: monthKey(maxStr), daysElapsed: dd, daysInMonth: new Date(yy, mm, 0).getDate() };
+  const t = todayStr();
+  const daysInMonth = new Date(parseInt(t.slice(0,4),10), parseInt(t.slice(5,7),10), 0).getDate();
+  return { mk: monthKey(t), daysElapsed: parseInt(t.slice(8,10),10), daysInMonth };
 }
 function monthProgress(currentValue, goal, daysElapsed, daysInMonth){
   const pct = goal>0 ? (currentValue/goal*100) : 0;
@@ -2078,6 +2081,10 @@ async function salvarUsuario(ev){
 
 (async function init(){
   await loadConfig();
+  await sincronizarRelogioServidor_();
+  selectedDate = todayStr();
+  const fDataEl = document.getElementById('f-data');
+  if(fDataEl) fDataEl.value = selectedDate;
   if(loadSession_()){
     await mostrarApp();
   }
