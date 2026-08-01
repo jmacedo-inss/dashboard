@@ -116,6 +116,14 @@
   @keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
 
   .panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:var(--shadow);}
+  .lancar-card h2{margin:0 0 16px;}
+  .lancar-cols{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+  .lancar-col{min-width:0;}
+  .lancar-col h3{font-family:'Outfit';font-size:14px;font-weight:600;color:var(--text);margin:0 0 12px;}
+  @media (max-width: 760px){ .lancar-cols{grid-template-columns:1fr;} }
+  .mes-ativo-wrap{display:flex;align-items:center;gap:10px;margin:-4px 0 16px;}
+  .mes-ativo-wrap label{font-size:12.5px;color:var(--text-faint);font-weight:600;}
+  .mes-ativo-wrap select{height:36px;padding:0 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);font-family:'Manrope';font-size:13px;color:var(--text);}
   .panel h2{font-family:'Outfit';font-weight:600;font-size:15px;margin:0 0 4px;color:var(--text);}
   .panel h2 span{color:var(--text-faint);font-weight:500;font-size:13px;}
   .panel .head-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
@@ -505,102 +513,108 @@
 
   <div class="goal-cards" id="goal-cards"></div>
 
+  <div class="panel lancar-card">
+    <h2>Lançar</h2>
+    <div class="lancar-cols">
+      <div class="lancar-col">
+        <h3>Orçamento <span id="orc-atual"></span></h3>
+        <div id="orc-form">
+          <div class="field">
+            <label>Data</label>
+            <input type="date" id="f-data" class="mono">
+          </div>
+          <div class="field">
+            <label>Valor total (R$)</label>
+            <input type="text" inputmode="decimal" id="f-orc-valor" class="mono" placeholder="0,00" oninput="maskCurrency(this)">
+          </div>
+          <button class="primary" onclick="saveOrcamento()">Salvar orçamento</button>
+        </div>
+      </div>
+
+      <div class="lancar-col">
+        <h3>Importar TAs</h3>
+        <div class="upload-box">
+          <div class="upload-row">
+            <label for="f-upload" class="upload-btn"><span class="ic">⇧</span> Escolher planilha</label>
+            <input type="file" id="f-upload" accept=".xlsx,.xls,.csv" onchange="handleUpload(event)">
+            <span id="upload-filename" class="upload-filename">Nenhum arquivo selecionado</span>
+          </div>
+          <p class="hint">a data de cada TA vem da própria planilha (coluna CREATE_DATE) — pode importar vários dias de uma vez, não precisa escolher data aqui</p>
+        </div>
+
+        <div id="upload-preview" style="display:none">
+          <p class="hint">Planilha lida: <span id="preview-count"></span> linha(s). <span id="auto-detect-msg"></span></p>
+          <div class="map-row">
+            <div class="field">
+              <label>Coluna da data (CREATE_DATE)</label>
+              <select id="map-data" onchange="renderImportPreviewTable()"></select>
+            </div>
+            <div class="field">
+              <label>Coluna do usuário (User ID)</label>
+              <select id="map-usuario" onchange="renderImportPreviewTable()"></select>
+            </div>
+            <div class="field">
+              <label>Coluna do resultado (CONSULTATION RESULT)</label>
+              <select id="map-tipo" onchange="renderImportPreviewTable()"></select>
+            </div>
+            <div class="field">
+              <label>Texto que marca transferência p/ OS</label>
+              <input type="text" id="map-os-keyword" class="mono" value="abertura de os" oninput="renderImportPreviewTable()">
+            </div>
+          </div>
+          <table>
+            <thead><tr><th>Data</th><th>Usuário</th><th>Resultado</th></tr></thead>
+            <tbody id="preview-body"></tbody>
+          </table>
+          <div style="display:flex;gap:10px;margin-top:14px;">
+            <button class="primary" id="btn-confirm-import" onclick="confirmImport()">Confirmar importação</button>
+            <button class="ghost" onclick="cancelImport()">Cancelar</button>
+          </div>
+        </div>
+
+        <div id="import-progress-wrap" style="display:none;">
+          <p id="import-progress-label" class="hint">Importando TAs...</p>
+          <div class="progress-track"><div class="progress-fill"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="head-row">
+      <h2>Validar TAs pagos <span style="font-weight:400;color:var(--text-faint);font-size:12.5px;">(planilha de conciliação da Samsung)</span></h2>
+    </div>
+    <div class="upload-box">
+      <div class="upload-row">
+        <label for="f-validacao" class="upload-btn"><span class="ic">✓</span> Escolher planilha de pagamento</label>
+        <input type="file" id="f-validacao" accept=".xlsx,.xls,.csv" onchange="handleValidacaoUpload(event)">
+        <span id="validacao-filename" class="upload-filename">Nenhum arquivo selecionado</span>
+      </div>
+      <p class="hint">casa cada linha pelo OBJECT_ID com os TAs já importados, e substitui o resultado presumido pelo resultado real (Pagar/Descontar) — só funciona para TAs que já têm OBJECT_ID salvo.</p>
+    </div>
+
+    <div id="validacao-preview" style="display:none">
+      <p class="hint"><span id="validacao-auto-msg"></span></p>
+      <div style="display:flex;gap:10px;margin-top:10px;">
+        <button class="primary" onclick="confirmarValidacao()">Confirmar conciliação</button>
+        <button class="ghost" onclick="cancelarValidacao()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="mes-ativo-wrap">
+    <label for="mes-ativo-select">Mês</label>
+    <select id="mes-ativo-select" onchange="mudarMesAtivo(this.value)"></select>
+  </div>
+
   <nav class="tabs">
-    <button data-view="lancar" class="active">Lançar</button>
+    <button data-view="diario" class="active">Diário</button>
     <button data-view="semanal">Semanal</button>
     <button data-view="mensal">Mensal</button>
     <button data-view="historico">Histórico completo</button>
   </nav>
 
-  <section class="view active" id="view-lancar">
-
-    <div class="panel">
-      <h2>Orçamento <span id="orc-atual"></span></h2>
-      <div id="orc-form">
-        <div class="field">
-          <label>Data</label>
-          <input type="date" id="f-data" class="mono">
-        </div>
-        <div class="field">
-          <label>Valor total (R$)</label>
-          <input type="text" inputmode="decimal" id="f-orc-valor" class="mono" placeholder="0,00" oninput="maskCurrency(this)">
-        </div>
-        <button class="primary" onclick="saveOrcamento()">Salvar orçamento</button>
-      </div>
-    </div>
-
-    <div class="panel">
-      <div class="head-row">
-        <h2>Importar TAs</h2>
-      </div>
-
-      <div class="upload-box">
-        <div class="upload-row">
-          <label for="f-upload" class="upload-btn"><span class="ic">⇧</span> Escolher planilha</label>
-          <input type="file" id="f-upload" accept=".xlsx,.xls,.csv" onchange="handleUpload(event)">
-          <span id="upload-filename" class="upload-filename">Nenhum arquivo selecionado</span>
-        </div>
-        <p class="hint">a data de cada TA vem da própria planilha (coluna CREATE_DATE) — pode importar vários dias de uma vez, não precisa escolher data aqui</p>
-      </div>
-
-      <div id="upload-preview" style="display:none">
-        <p class="hint">Planilha lida: <span id="preview-count"></span> linha(s). <span id="auto-detect-msg"></span></p>
-        <div class="map-row">
-          <div class="field">
-            <label>Coluna da data (CREATE_DATE)</label>
-            <select id="map-data" onchange="renderImportPreviewTable()"></select>
-          </div>
-          <div class="field">
-            <label>Coluna do usuário (User ID)</label>
-            <select id="map-usuario" onchange="renderImportPreviewTable()"></select>
-          </div>
-          <div class="field">
-            <label>Coluna do resultado (CONSULTATION RESULT)</label>
-            <select id="map-tipo" onchange="renderImportPreviewTable()"></select>
-          </div>
-          <div class="field">
-            <label>Texto que marca transferência p/ OS</label>
-            <input type="text" id="map-os-keyword" class="mono" value="abertura de os" oninput="renderImportPreviewTable()">
-          </div>
-        </div>
-        <table>
-          <thead><tr><th>Data</th><th>Usuário</th><th>Resultado</th></tr></thead>
-          <tbody id="preview-body"></tbody>
-        </table>
-        <div style="display:flex;gap:10px;margin-top:14px;">
-          <button class="primary" id="btn-confirm-import" onclick="confirmImport()">Confirmar importação</button>
-          <button class="ghost" onclick="cancelImport()">Cancelar</button>
-        </div>
-      </div>
-
-      <div id="import-progress-wrap" style="display:none;">
-        <p id="import-progress-label" class="hint">Importando TAs...</p>
-        <div class="progress-track"><div class="progress-fill"></div></div>
-      </div>
-    </div>
-
-    <div class="panel">
-      <div class="head-row">
-        <h2>Validar TAs pagos <span style="font-weight:400;color:var(--text-faint);font-size:12.5px;">(planilha de conciliação da Samsung)</span></h2>
-      </div>
-      <div class="upload-box">
-        <div class="upload-row">
-          <label for="f-validacao" class="upload-btn"><span class="ic">✓</span> Escolher planilha de pagamento</label>
-          <input type="file" id="f-validacao" accept=".xlsx,.xls,.csv" onchange="handleValidacaoUpload(event)">
-          <span id="validacao-filename" class="upload-filename">Nenhum arquivo selecionado</span>
-        </div>
-        <p class="hint">casa cada linha pelo OBJECT_ID com os TAs já importados, e substitui o resultado presumido pelo resultado real (Pagar/Descontar) — só funciona para TAs que já têm OBJECT_ID salvo.</p>
-      </div>
-
-      <div id="validacao-preview" style="display:none">
-        <p class="hint"><span id="validacao-auto-msg"></span></p>
-        <div style="display:flex;gap:10px;margin-top:10px;">
-          <button class="primary" onclick="confirmarValidacao()">Confirmar conciliação</button>
-          <button class="ghost" onclick="cancelarValidacao()">Cancelar</button>
-        </div>
-      </div>
-    </div>
-
+  <section class="view active" id="view-diario">
     <div class="panel">
       <h2>Resumo por dia</h2>
       <div id="diario-body"></div>
@@ -638,6 +652,7 @@
         <thead><tr><th class="check-col"><input type="checkbox" id="hist-check-todos" onchange="toggleSelecionarTodosHist(this)" title="Selecionar todos"></th><th>Data</th><th>Usuário</th><th>Tipo</th><th class="num">Valor</th><th></th></tr></thead>
         <tbody id="hist-body"></tbody>
       </table>
+
     </div>
   </section>
 
@@ -1427,9 +1442,29 @@ function isoWeekNumber_(dateStr){
   return 1 + Math.round(((d - week1)/86400000 - 3 + ((week1.getDay()+6)%7)) / 7);
 }
 let diarioPage = 1;
+let mesAtivo = null;
+function mesesDisponiveis_(){
+  const set = new Set(records.map(r=>monthKey(normalizeDateStr_(r.data))).filter(Boolean));
+  set.add(referenceInfo_().mk);
+  return Array.from(set).sort().reverse();
+}
+function popularSeletorMesAtivo_(){
+  const sel = document.getElementById('mes-ativo-select');
+  if(!sel) return;
+  const meses = mesesDisponiveis_();
+  if(!mesAtivo || !meses.includes(mesAtivo)) mesAtivo = referenceInfo_().mk;
+  sel.innerHTML = meses.map(mk=>`<option value="${mk}" ${mk===mesAtivo?'selected':''}>${monthLabel(mk).replace(/^./,c=>c.toUpperCase())}</option>`).join('');
+}
+function mudarMesAtivo(mk){
+  mesAtivo = mk;
+  diarioPage = 1;
+  renderDiario();
+  renderSemanal();
+}
 const DIARIO_PAGE_SIZE = 30;
 function renderDiario(){
-  const allGroups = groupBy(records,r=>r.data);
+  const recsDoMes = mesAtivo ? records.filter(r=>monthKey(normalizeDateStr_(r.data))===mesAtivo) : records;
+  const allGroups = groupBy(recsDoMes,r=>r.data);
   const keys = Object.keys(allGroups).sort().reverse();
   const totalPages = Math.max(1, Math.ceil(keys.length / DIARIO_PAGE_SIZE));
   if(diarioPage > totalPages) diarioPage = totalPages;
@@ -1471,7 +1506,8 @@ function renderPaginacaoDiario_(current, total){
   el.innerHTML = html;
 }
 function renderSemanal(){
-  renderPeriodTable('semanal-body', groupBy(records,r=>getMonday(r.data)), (monday)=> 'W'+isoWeekNumber_(monday)+' · '+fmtDateBR(monday)+' – '+fmtDateBR(addDays(monday,6)), false, 'sem');
+  const recsDoMes = mesAtivo ? records.filter(r=>monthKey(normalizeDateStr_(r.data))===mesAtivo) : records;
+  renderPeriodTable('semanal-body', groupBy(recsDoMes,r=>getMonday(r.data)), (monday)=> 'W'+isoWeekNumber_(monday)+' · '+fmtDateBR(monday)+' – '+fmtDateBR(addDays(monday,6)), false, 'sem');
 }
 function renderMensal(){
   renderPeriodTable('mensal-body', groupBy(records,r=>monthKey(r.data)), (mk)=> monthLabel(mk).replace(/^./, c=>c.toUpperCase()), true, 'mes');
@@ -1540,7 +1576,7 @@ async function excluirSelecionadosHist(){
   await persistAndSync();
   renderAll();
 }
-function renderAll(){ suspeitosPorMes = {}; renderGoalCards(); renderLancar(); renderDiario(); renderSemanal(); renderMensal(); renderHistorico(); }
+function renderAll(){ suspeitosPorMes = {}; popularSeletorMesAtivo_(); renderGoalCards(); renderLancar(); renderDiario(); renderSemanal(); renderMensal(); renderHistorico(); }
 
 function exportExcel(){
   const wb = XLSX.utils.book_new();
