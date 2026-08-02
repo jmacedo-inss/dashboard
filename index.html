@@ -580,28 +580,6 @@
     </div>
   </div>
 
-  <div class="panel">
-    <div class="head-row">
-      <h2>Validar TAs pagos <span style="font-weight:400;color:var(--text-faint);font-size:12.5px;">(planilha de conciliação da Samsung)</span></h2>
-    </div>
-    <div class="upload-box">
-      <div class="upload-row">
-        <label for="f-validacao" class="upload-btn"><span class="ic">✓</span> Escolher planilha de pagamento</label>
-        <input type="file" id="f-validacao" accept=".xlsx,.xls,.csv" onchange="handleValidacaoUpload(event)">
-        <span id="validacao-filename" class="upload-filename">Nenhum arquivo selecionado</span>
-      </div>
-      <p class="hint">casa cada linha pelo OBJECT_ID com os TAs já importados, e substitui o resultado presumido pelo resultado real (Pagar/Descontar) — só funciona para TAs que já têm OBJECT_ID salvo.</p>
-    </div>
-
-    <div id="validacao-preview" style="display:none">
-      <p class="hint"><span id="validacao-auto-msg"></span></p>
-      <div style="display:flex;gap:10px;margin-top:10px;">
-        <button class="primary" onclick="confirmarValidacao()">Confirmar conciliação</button>
-        <button class="ghost" onclick="cancelarValidacao()">Cancelar</button>
-      </div>
-    </div>
-  </div>
-
   <div class="mes-ativo-wrap">
     <label for="mes-ativo-select">Mês</label>
     <select id="mes-ativo-select" onchange="mudarMesAtivo(this.value)"></select>
@@ -627,6 +605,27 @@
   </section>
 
   <section class="view" id="view-mensal">
+    <div class="panel">
+      <div class="head-row">
+        <h2>Validar TAs pagos <span style="font-weight:400;color:var(--text-faint);font-size:12.5px;">(planilha de conciliação da Samsung)</span></h2>
+      </div>
+      <div class="upload-box">
+        <div class="upload-row">
+          <label for="f-validacao" class="upload-btn"><span class="ic">✓</span> Escolher planilha de pagamento</label>
+          <input type="file" id="f-validacao" accept=".xlsx,.xls,.csv" onchange="handleValidacaoUpload(event)">
+          <span id="validacao-filename" class="upload-filename">Nenhum arquivo selecionado</span>
+        </div>
+        <p class="hint">casa cada linha pelo OBJECT_ID com os TAs já importados, e substitui o resultado presumido pelo resultado real (Pagar/Descontar) — só funciona para TAs que já têm OBJECT_ID salvo.</p>
+      </div>
+
+      <div id="validacao-preview" style="display:none">
+        <p class="hint"><span id="validacao-auto-msg"></span></p>
+        <div style="display:flex;gap:10px;margin-top:10px;">
+          <button class="primary" onclick="confirmarValidacao()">Confirmar conciliação</button>
+          <button class="ghost" onclick="cancelarValidacao()">Cancelar</button>
+        </div>
+      </div>
+    </div>
     <div class="panel"><h2>Resumo por mês</h2><div id="mensal-body"></div></div>
   </section>
 
