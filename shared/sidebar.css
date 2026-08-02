@@ -10,15 +10,24 @@
 .sidebar-link:hover{background:#F5F8FC;color:#101827;}
 .sidebar-link.active{background:rgba(46,75,149,.12);color:#2E4B95;}
 .sidebar-link svg{width:17px;height:17px;flex-shrink:0;}
-.sidebar-user{border-top:1px solid #E6ECF5;padding-top:14px;margin-top:14px;}
+.sidebar-user{border-top:1px solid #E6ECF5;padding-top:14px;margin-top:14px;position:relative;}
+.sidebar-user-btn{width:100%;display:flex;align-items:center;gap:9px;padding:6px;border-radius:8px;background:none;border:none;cursor:pointer;text-align:left;}
+.sidebar-user-btn:hover{background:#F5F8FC;}
+.sidebar-user-caret{color:#8994A8;flex-shrink:0;margin-left:auto;}
+.sidebar-user-caret svg{width:14px;height:14px;}
 .sidebar-user-info{display:flex;align-items:center;gap:9px;padding:0 6px;margin-bottom:10px;}
 .sidebar-avatar{width:2em;height:2em;border-radius:50%;background:linear-gradient(135deg, #2E4B95, #2F6FED);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;}
-.sidebar-user-text{min-width:0;}
+.sidebar-user-text{min-width:0;flex:1;}
 .sidebar-user-nome{font-family:'Manrope',sans-serif;font-weight:700;font-size:12.5px;color:#101827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .sidebar-user-unidade{font-size:11px;color:#8994A8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.sidebar-sair{width:100%;display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:8px;background:none;border:none;color:#E23B4C;font-family:'Manrope',sans-serif;font-weight:600;font-size:12.5px;cursor:pointer;}
-.sidebar-sair:hover{background:rgba(226,59,76,.1);}
-.sidebar-sair svg{width:16px;height:16px;}
+.sidebar-user-menu{display:none;position:absolute;left:0;right:0;bottom:calc(100% + 6px);background:#FFFFFF;border:1px solid #DCE4F0;border-radius:10px;box-shadow:0 1em 2.2em rgba(20,30,60,0.12);padding:6px;z-index:50;}
+.sidebar-user-menu.open{display:block;}
+.sidebar-user-menu button{width:100%;display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:7px;background:none;border:none;color:#586376;font-family:'Manrope',sans-serif;font-weight:600;font-size:12.5px;cursor:pointer;text-align:left;}
+.sidebar-user-menu button:hover{background:#F5F8FC;color:#101827;}
+.sidebar-user-menu button svg{width:15px;height:15px;flex-shrink:0;}
+.sidebar-user-menu button.danger{color:#E23B4C;}
+.sidebar-user-menu button.danger:hover{background:rgba(226,59,76,.1);}
+.sidebar-menu-sep{height:1px;background:#E6ECF5;margin:5px 2px;}
 .app-main{flex:1;min-width:0;}
 @media (max-width: 760px){
   .app-shell{flex-direction:column;}
