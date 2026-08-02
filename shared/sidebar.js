@@ -30,11 +30,11 @@
     var dashHref = activeKey === 'dashboard' ? './' : '../dashboard/';
     var pedHref = activeKey === 'pedidos' ? './' : '../express/';
     return tpl
-      .replace(/{{LOGO}}/g, LOGO)
-      .replace(/{{DASH_HREF}}/g, dashHref)
-      .replace(/{{PED_HREF}}/g, pedHref)
-      .replace(/{{DASH_ACTIVE}}/g, activeKey === 'dashboard' ? ' active' : '')
-      .replace(/{{PED_ACTIVE}}/g, activeKey === 'pedidos' ? ' active' : '');
+      .replace(/__LOGO__/g, LOGO)
+      .replace(/__DASH_HREF__/g, dashHref)
+      .replace(/__PED_HREF__/g, pedHref)
+      .replace(/__DASH_ACTIVE__/g, activeKey === 'dashboard' ? ' active' : '')
+      .replace(/__PED_ACTIVE__/g, activeKey === 'pedidos' ? ' active' : '');
   }
 
   function wireItem(id, fn){
