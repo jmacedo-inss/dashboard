@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<script>
+  // Garante que a página sempre tenha "/" no final da URL, senão os caminhos
+  // relativos (../shared/...) resolvem errado.
+  if (!location.pathname.endsWith('/')) {
+    location.replace(location.pathname + '/' + location.search + location.hash);
+  }
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Controle de Pedidos de Peças</title>
