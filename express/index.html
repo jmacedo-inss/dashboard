@@ -1680,9 +1680,9 @@ function aplicarCorSeletorUnidade_(){
     sel.style.borderColor = '';
   }
 }
-function renderUserChip(){
+async function renderUserChip(){
   if(window.SidebarShared){
-    SidebarShared.mount('dashboard', {
+    await SidebarShared.mount('dashboard', {
       onSair: sair,
       onTrocarSenha: abrirModalSenha,
       onGerenciarUsuarios: session.nivel === 'admin' ? abrirModalUsuarios : null,
@@ -1747,7 +1747,7 @@ async function mostrarApp(){
   document.getElementById('login-overlay').style.display = 'none';
   document.getElementById('app-shell').hidden = false;
   renderUnidadeArea();
-  renderUserChip();
+  await renderUserChip();
   await atualizarUnidadesSessao_();
   await carregarDadosUnidadeAtual();
 }
