@@ -59,6 +59,15 @@
 
   function fechar(id){ document.getElementById(id).style.display = 'none'; }
 
+  function configurarFechamentoPorFora_(overlay, id){
+    var comecouNoFundo = false;
+    overlay.addEventListener('mousedown', function(e){ comecouNoFundo = (e.target === overlay); });
+    overlay.addEventListener('click', function(e){
+      if(e.target === overlay && comecouNoFundo) fechar(id);
+      comecouNoFundo = false;
+    });
+  }
+
   function wireStatic(){
     document.getElementById('gm-uf-cor').addEventListener('input', function(){
       document.getElementById('gm-uf-cor-hex').textContent = this.value.toUpperCase();
@@ -80,8 +89,8 @@
     document.getElementById('gm-btn-excluir-usuario').onclick = excluirUsuario;
     document.getElementById('gm-fechar-unidades').onclick = function(){ fechar('gm-modal-unidades'); };
     document.getElementById('gm-fechar-usuarios').onclick = function(){ fechar('gm-modal-usuarios'); };
-    document.getElementById('gm-modal-unidades').addEventListener('click', function(e){ if(e.target === this) fechar('gm-modal-unidades'); });
-    document.getElementById('gm-modal-usuarios').addEventListener('click', function(e){ if(e.target === this) fechar('gm-modal-usuarios'); });
+    configurarFechamentoPorFora_(document.getElementById('gm-modal-unidades'), 'gm-modal-unidades');
+    configurarFechamentoPorFora_(document.getElementById('gm-modal-usuarios'), 'gm-modal-usuarios');
   }
 
   /* ---- Unidades ---- */
