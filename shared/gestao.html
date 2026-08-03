@@ -1,0 +1,71 @@
+<!-- Gestão de unidades e usuários, compartilhada entre /dashboard e /express.
+     Buscado via fetch() pelo gestao.js e injetado direto no <body> — não
+     precisa de mount point no HTML de cada app, os dois modais são overlays
+     fixos e funcionam de qualquer lugar da página.
+     Não é uma página sozinha — não abra este arquivo direto no navegador. -->
+<div class="gm-overlay" id="gm-modal-unidades" style="display:none">
+  <div class="gm-box">
+    <h3>Unidades</h3>
+    <table class="gm-table">
+      <thead><tr><th>Nome</th><th>Meta orçamento</th><th>Meta TAs</th><th>Meta/consultor</th></tr></thead>
+      <tbody id="gm-unidades-tbody"></tbody>
+    </table>
+    <form class="gm-form" id="gm-form-unidade">
+      <input type="hidden" id="gm-uf-id">
+      <div class="gm-full gm-field"><label>Nome da unidade</label><input type="text" id="gm-uf-nome" required></div>
+      <div class="gm-full gm-field">
+        <label>Cor de identificação</label>
+        <div class="gm-cor-wrap"><input type="color" id="gm-uf-cor" value="#2E4B95"><span id="gm-uf-cor-hex" class="gm-mono">#2E4B95</span></div>
+      </div>
+      <div class="gm-field"><label>Meta orçamento (R$)</label><input type="text" inputmode="decimal" id="gm-uf-meta-orc" class="gm-mono" placeholder="0,00"></div>
+      <div class="gm-field"><label>Meta TAs válidos</label><input type="number" id="gm-uf-meta-tas" class="gm-mono" min="0"></div>
+      <div class="gm-field"><label>Meta por consultor</label><input type="number" id="gm-uf-meta-consultor" class="gm-mono" min="0"></div>
+      <div class="gm-full gm-actions">
+        <button type="submit" class="gm-primary">Salvar unidade</button>
+        <button type="button" class="gm-ghost" id="gm-btn-limpar-unidade">Nova unidade</button>
+        <button type="button" class="gm-ghost gm-push-right" id="gm-fechar-unidades">Fechar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="gm-overlay" id="gm-modal-usuarios" style="display:none">
+  <div class="gm-box">
+    <h3>Usuários</h3>
+    <table class="gm-table">
+      <thead><tr><th>Nome</th><th>Usuário</th><th>Nível</th><th>Unidade</th><th>ID do consultor</th></tr></thead>
+      <tbody id="gm-usuarios-tbody"></tbody>
+    </table>
+    <form class="gm-form" id="gm-form-usuario">
+      <input type="hidden" id="gm-usf-id">
+      <div class="gm-field"><label>Nome</label><input type="text" id="gm-usf-nome" required></div>
+      <div class="gm-field"><label>Usuário (login)</label><input type="text" id="gm-usf-usuario" required></div>
+      <div class="gm-field"><label>Senha</label>
+        <div class="gm-pw-wrap"><input type="password" id="gm-usf-senha" placeholder="deixe em branco p/ manter">
+          <button type="button" class="gm-pw-toggle" id="gm-usf-senha-toggle" tabindex="-1">
+            <svg class="gm-icon-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            <svg class="gm-icon-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.7 18.7 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+          </button>
+        </div>
+      </div>
+      <div class="gm-field"><label>Nível</label>
+        <select id="gm-usf-nivel">
+          <option value="consultor">Consultor L1</option>
+          <option value="consultor_l2">Consultor L2</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <div class="gm-field" id="gm-usf-unidade-wrap"><label>Unidade</label><select id="gm-usf-unidade"></select></div>
+      <div class="gm-full gm-field"><label>ID do consultor (User ID da planilha, opcional)</label><input type="text" id="gm-usf-id-consultor" class="gm-mono" placeholder="ex: dpedro.mcarva***"></div>
+      <div class="gm-full gm-actions">
+        <button type="submit" class="gm-primary">Salvar usuário</button>
+        <button type="button" class="gm-ghost" id="gm-btn-limpar-usuario">Novo usuário</button>
+        <button type="button" class="gm-danger" id="gm-btn-excluir-usuario" style="display:none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+          Excluir usuário
+        </button>
+        <button type="button" class="gm-ghost gm-push-right" id="gm-fechar-usuarios">Fechar</button>
+      </div>
+    </form>
+  </div>
+</div>
