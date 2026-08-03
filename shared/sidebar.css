@@ -15,6 +15,16 @@
 #shared-sidebar-root .sidebar-link:hover{background:#F5F8FC;color:#101827;}
 #shared-sidebar-root .sidebar-link.active{background:rgba(46,75,149,.12);color:#2E4B95;}
 #shared-sidebar-root .sidebar-link svg{width:17px;height:17px;flex-shrink:0;}
+#shared-sidebar-root .sidebar-unidade{display:flex;align-items:center;gap:6px;padding:8px 6px;border-top:1px solid #E6ECF5;border-bottom:1px solid #E6ECF5;color:#8994A8;}
+#shared-sidebar-root .sidebar-unidade > svg{width:15px;height:15px;flex-shrink:0;}
+#shared-sidebar-root .sidebar-unidade select{flex:1;min-width:0;border:none;background:none;color:#101827;font-family:'Manrope',sans-serif;font-weight:600;font-size:12px;cursor:pointer;padding:2px 0;}
+#shared-sidebar-root .sidebar-unidade select:disabled{color:#586376;cursor:default;opacity:1;-webkit-text-fill-color:#586376;}
+#shared-sidebar-root .sidebar-sync-btn{flex-shrink:0;width:22px;height:22px;border-radius:6px;background:none;border:none;color:#8994A8;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+#shared-sidebar-root .sidebar-sync-btn:hover{background:#F5F8FC;color:#2E4B95;}
+#shared-sidebar-root .sidebar-sync-btn svg{width:13px;height:13px;}
+#shared-sidebar-root .sidebar-sync-btn.spinning svg{animation:shared-sidebar-spin .8s linear infinite;}
+@keyframes shared-sidebar-spin{to{transform:rotate(360deg);}}
+
 #shared-sidebar-root .sidebar-user{border-top:1px solid #E6ECF5;padding-top:14px;margin-top:14px;position:relative;}
 #shared-sidebar-root .sidebar-user-btn{width:100%;display:flex;align-items:center;gap:9px;padding:6px;border-radius:8px;background:none;border:none;cursor:pointer;text-align:left;}
 #shared-sidebar-root .sidebar-user-btn:hover{background:#F5F8FC;}
@@ -39,6 +49,7 @@
   #shared-sidebar-root{width:100%;height:auto;position:relative;flex-direction:row;align-items:center;padding:10px 14px;overflow-x:auto;gap:14px;}
   #shared-sidebar-root .sidebar-brand{margin-bottom:0;}
   #shared-sidebar-root .sidebar-nav{flex-direction:row;flex:none;}
+  #shared-sidebar-root .sidebar-unidade{border-top:none;border-bottom:none;border-left:1px solid #E6ECF5;padding-left:14px;max-width:160px;}
   #shared-sidebar-root .sidebar-user{border-top:none;border-left:1px solid #E6ECF5;padding-top:0;margin-top:0;padding-left:14px;margin-left:auto;display:flex;align-items:center;gap:10px;}
   #shared-sidebar-root .sidebar-user-info{margin-bottom:0;}
 }
