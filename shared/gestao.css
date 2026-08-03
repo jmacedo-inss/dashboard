@@ -1,0 +1,38 @@
+/* Gestão de unidades/usuários compartilhada — cores fixas (não dependem do
+   tema de cada app), do mesmo jeito que sidebar.css. */
+.gm-overlay{position:fixed;inset:0;background:rgba(16,24,39,0.45);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;font-family:'Manrope',sans-serif;}
+.gm-box{background:#FFFFFF;border-radius:14px;box-shadow:0 1.5em 3em rgba(20,30,60,0.25);padding:26px 28px;max-width:640px;width:100%;max-height:88vh;overflow-y:auto;}
+.gm-box h3{margin:0 0 14px;font-family:'Outfit',sans-serif;font-size:15px;color:#101827;}
+.gm-table{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:18px;}
+.gm-table th{text-align:left;color:#8994A8;font-weight:500;font-size:10px;text-transform:uppercase;padding:6px 8px;border-bottom:1px solid #DCE4F0;}
+.gm-table td{padding:8px;border-bottom:1px solid #E6ECF5;color:#586376;cursor:pointer;}
+.gm-table tr:hover td{background:#F5F8FC;}
+.gm-empty{color:#8994A8;font-style:italic;cursor:default !important;}
+.gm-empty:hover{background:none !important;}
+.gm-cor-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;}
+.gm-mono{font-family:'IBM Plex Mono',monospace;}
+.gm-form{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px;}
+.gm-full{grid-column:1 / -1;}
+.gm-field label{display:block;font-size:11px;color:#8994A8;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;}
+.gm-field input,.gm-field select{width:100%;height:36px;padding:0 10px;border-radius:6px;border:1px solid #DCE4F0;background:#F5F8FC;color:#101827;font-family:'Manrope',sans-serif;font-size:13px;}
+.gm-cor-wrap{display:flex;align-items:center;gap:10px;}
+.gm-cor-wrap input[type=color]{width:40px;height:36px;padding:2px;border-radius:6px;border:1px solid #DCE4F0;background:#F5F8FC;cursor:pointer;}
+.gm-pw-wrap{position:relative;}
+.gm-pw-wrap input{padding-right:36px;}
+.gm-pw-toggle{position:absolute;right:5px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#8994A8;display:flex;align-items:center;justify-content:center;padding:4px;border-radius:5px;}
+.gm-pw-toggle:hover{color:#2E4B95;}
+.gm-pw-toggle svg{width:16px;height:16px;}
+.gm-pw-toggle .gm-icon-off{display:none;}
+.gm-pw-toggle.showing .gm-icon-on{display:none;}
+.gm-pw-toggle.showing .gm-icon-off{display:block;}
+.gm-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;}
+.gm-push-right{margin-left:auto;}
+.gm-primary{background:linear-gradient(135deg, #2E4B95, #2F6FED);color:#fff;border:none;border-radius:8px;height:36px;padding:0 18px;font-family:'Manrope',sans-serif;font-weight:600;font-size:13.5px;cursor:pointer;}
+.gm-ghost{background:#FFFFFF;color:#586376;border:1px solid #DCE4F0;border-radius:8px;height:36px;padding:0 16px;font-family:'Manrope',sans-serif;font-weight:600;font-size:13px;cursor:pointer;}
+.gm-ghost:hover{border-color:#2E4B95;color:#2E4B95;}
+.gm-danger{display:flex;align-items:center;gap:6px;background:#FFFFFF;color:#E23B4C;border:1px solid #F3C6CB;border-radius:8px;height:36px;padding:0 16px;font-family:'Manrope',sans-serif;font-weight:600;font-size:13px;cursor:pointer;}
+.gm-danger:hover{background:rgba(226,59,76,.08);}
+.gm-danger svg{width:15px;height:15px;}
+@media (max-width: 620px){
+  .gm-form{grid-template-columns:1fr;}
+}
