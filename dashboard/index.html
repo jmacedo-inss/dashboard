@@ -641,7 +641,7 @@ function consultoresDaUnidade_(){
 function comZerosParaConsultores_(byUser){
   const out = {};
   consultoresDaUnidade_().forEach(c=>{
-    out[c.idConsultor] = byUser[c.idConsultor] || {ta:0, os:0};
+    out[c.IdConsultor] = byUser[c.IdConsultor] || {ta:0, os:0};
   });
   return out;
 }
