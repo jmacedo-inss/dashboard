@@ -16,6 +16,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <link rel="stylesheet" href="../shared/sidebar.css">
+<link rel="stylesheet" href="../shared/gestao.css">
+<script src="../shared/gestao.js"></script>
 <script src="../shared/sidebar.js"></script>
 <style>
   :root{
@@ -428,69 +430,6 @@
     </div>
   </div>
 
-  <div class="modal-overlay" id="modal-unidades" style="display:none">
-    <div class="modal-box wide">
-      <h3 style="margin:0 0 14px;font-family:'Outfit';font-size:15px;">Unidades</h3>
-      <table class="admin-table">
-        <thead><tr><th>Nome</th><th>Meta orçamento</th><th>Meta TAs</th><th>Meta/consultor</th></tr></thead>
-        <tbody id="unidades-tbody"></tbody>
-      </table>
-      <form class="admin-form" onsubmit="salvarUnidade(event)">
-        <input type="hidden" id="uf-id">
-        <div class="full field"><label>Nome da unidade</label><input type="text" id="uf-nome" required></div>
-        <div class="full field">
-          <label>Cor de identificação</label>
-          <div class="cor-picker-wrap"><input type="color" id="uf-cor" value="#2E4B95" oninput="document.getElementById('uf-cor-hex').textContent=this.value.toUpperCase()"><span id="uf-cor-hex" class="mono">#2E4B95</span></div>
-        </div>
-        <div class="field"><label>Meta orçamento (R$)</label><input type="text" inputmode="decimal" id="uf-meta-orc" class="mono" placeholder="0,00" oninput="maskCurrency(this)"></div>
-        <div class="field"><label>Meta TAs válidos</label><input type="number" id="uf-meta-tas" class="mono" min="0"></div>
-        <div class="field"><label>Meta por consultor</label><input type="number" id="uf-meta-consultor" class="mono" min="0"></div>
-        <div class="full" style="display:flex;gap:8px;">
-          <button type="submit" class="primary">Salvar unidade</button>
-          <button type="button" class="ghost" onclick="limparFormUnidade()">Nova unidade</button>
-          <button type="button" class="ghost" onclick="fecharModal('modal-unidades')" style="margin-left:auto;">Fechar</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="modal-usuarios" style="display:none">
-    <div class="modal-box wide">
-      <h3 style="margin:0 0 14px;font-family:'Outfit';font-size:15px;">Usuários</h3>
-      <table class="admin-table">
-        <thead><tr><th>Nome</th><th>Usuário</th><th>Nível</th><th>Unidade</th><th>ID do consultor</th></tr></thead>
-        <tbody id="usuarios-tbody"></tbody>
-      </table>
-      <form class="admin-form" onsubmit="salvarUsuario(event)">
-        <input type="hidden" id="usf-id">
-        <div class="field"><label>Nome</label><input type="text" id="usf-nome" required></div>
-        <div class="field"><label>Usuário (login)</label><input type="text" id="usf-usuario" required></div>
-        <div class="field"><label>Senha</label>
-          <div class="pw-wrap"><input type="password" id="usf-senha" placeholder="deixe em branco p/ manter">
-            <button type="button" class="pw-toggle" onclick="togglePw('usf-senha', this)" tabindex="-1">
-              <svg class="icon-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-              <svg class="icon-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.7 18.7 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
-            </button>
-          </div>
-        </div>
-        <div class="field"><label>Nível</label>
-          <select id="usf-nivel" onchange="toggleUnidadeUsuarioField()">
-            <option value="consultor">Consultor L1</option>
-            <option value="consultor_l2">Consultor L2</option>
-            <option value="admin">Admin</option>
-          </select>
-        </div>
-        <div class="field" id="usf-unidade-wrap"><label>Unidade</label><select id="usf-unidade"></select></div>
-        <div class="full field"><label>ID do consultor (User ID da planilha, opcional)</label><input type="text" id="usf-id-consultor" class="mono" placeholder="ex: dpedro.mcarva***"></div>
-        <div class="full" style="display:flex;gap:8px;">
-          <button type="submit" class="primary">Salvar usuário</button>
-          <button type="button" class="ghost" onclick="limparFormUsuario()">Novo usuário</button>
-          <button type="button" class="btn-danger-solid" id="btn-excluir-usuario" onclick="excluirUsuario()" style="display:none;margin-left:0;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>Excluir usuário</button>
-          <button type="button" class="ghost" onclick="fecharModal('modal-usuarios')" style="margin-left:auto;">Fechar</button>
-        </div>
-      </form>
-    </div>
-  </div>
 
   <details class="cfg-panel" id="cfg-panel">
     <summary>Conectar ao Google Sheets</summary>
@@ -1692,8 +1631,8 @@ async function renderUserChip(){
     await SidebarShared.mount('dashboard', {
       onSair: sair,
       onTrocarSenha: abrirModalSenha,
-      onGerenciarUsuarios: session.nivel === 'admin' ? abrirModalUsuarios : null,
-      onGerenciarUnidades: session.nivel === 'admin' ? abrirModalUnidades : null
+      onGerenciarUsuarios: session.nivel === 'admin' ? function(){ GestaoShared.abrirUsuarios(); } : null,
+      onGerenciarUnidades: session.nivel === 'admin' ? function(){ GestaoShared.abrirUnidades(); } : null
     });
     SidebarShared.setUser(session.nome, session.nivel === 'admin' ? 'Administrador' : (session.unidadeNome || '—'));
   }
@@ -2064,173 +2003,6 @@ function substituirLinhasXml_(doc, aoa){
 
 
 
-/* ---- Gestão de unidades (admin) ---- */
-async function abrirModalUnidades(){
-  document.getElementById('modal-unidades').style.display = 'flex';
-  limparFormUnidade();
-  await carregarUnidadesAdmin();
-}
-async function carregarUnidadesAdmin(){
-  try{
-    const res = await fetch(config.sheetsUrl, {
-      method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body: JSON.stringify({action:'listarUnidades', token: session.token})
-    });
-    const data = await res.json();
-    unidadesTodasCache = data.ok ? (data.unidades || []) : [];
-  }catch(e){ unidadesTodasCache = []; }
-  const tbody = document.getElementById('unidades-tbody');
-  tbody.innerHTML = unidadesTodasCache.length ? unidadesTodasCache.map(u=>`
-    <tr onclick='preencherFormUnidade(${JSON.stringify(u).replace(/'/g,"&apos;")})'>
-      <td>${u.Cor?`<span class="unidade-cor-dot" style="background:${u.Cor}"></span>`:''}${u.Nome}</td><td>${fmtBRL(Number(u.MetaOrcamento)||0)}</td><td>${u.MetaTas||0}</td><td>${u.MetaTasConsultor||0}</td>
-    </tr>`).join('') : '<tr><td colspan="4" class="empty">Nenhuma unidade cadastrada.</td></tr>';
-}
-function preencherFormUnidade(u){
-  document.getElementById('uf-id').value = u.ID;
-  document.getElementById('uf-nome').value = u.Nome;
-  const cor = u.Cor || '#2E4B95';
-  document.getElementById('uf-cor').value = cor;
-  document.getElementById('uf-cor-hex').textContent = cor.toUpperCase();
-  document.getElementById('uf-meta-orc').value = (Number(u.MetaOrcamento)||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
-  document.getElementById('uf-meta-tas').value = u.MetaTas || 0;
-  document.getElementById('uf-meta-consultor').value = u.MetaTasConsultor || 0;
-}
-function limparFormUnidade(){
-  document.getElementById('uf-id').value = '';
-  document.getElementById('uf-nome').value = '';
-  document.getElementById('uf-cor').value = '#2E4B95';
-  document.getElementById('uf-cor-hex').textContent = '#2E4B95';
-  document.getElementById('uf-meta-orc').value = '';
-  document.getElementById('uf-meta-tas').value = '';
-  document.getElementById('uf-meta-consultor').value = '';
-}
-async function salvarUnidade(ev){
-  ev.preventDefault();
-  const id = document.getElementById('uf-id').value;
-  const dados = {
-    Nome: document.getElementById('uf-nome').value.trim(),
-    Cor: document.getElementById('uf-cor').value,
-    MetaOrcamento: parseCurrencyInput(document.getElementById('uf-meta-orc').value),
-    MetaTas: parseInt(document.getElementById('uf-meta-tas').value,10) || 0,
-    MetaTasConsultor: parseInt(document.getElementById('uf-meta-consultor').value,10) || 0
-  };
-  if(!dados.Nome) return;
-  await fetch(config.sheetsUrl, {
-    method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body: JSON.stringify({action: id ? 'atualizarUnidade' : 'criarUnidade', token: session.token, id: id || undefined, dados})
-  });
-  await atualizarUnidadesSessao_();
-  await carregarUnidadesAdmin();
-  limparFormUnidade();
-}
-
-/* ---- Gestão de usuários (admin) ---- */
-async function abrirModalUsuarios(){
-  document.getElementById('modal-usuarios').style.display = 'flex';
-  limparFormUsuario();
-  await popularSelectUnidadesUsuario_();
-  await carregarUsuariosAdmin();
-}
-async function popularSelectUnidadesUsuario_(){
-  try{
-    const res = await fetch(config.sheetsUrl, {
-      method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body: JSON.stringify({action:'listarUnidades', token: session.token})
-    });
-    const data = await res.json();
-    unidadesTodasCache = data.ok ? (data.unidades || []) : [];
-  }catch(e){ unidadesTodasCache = []; }
-  document.getElementById('usf-unidade').innerHTML = unidadesTodasCache.map(u=>`<option value="${u.ID}">${u.Nome}</option>`).join('');
-  toggleUnidadeUsuarioField();
-}
-function toggleUnidadeUsuarioField(){
-  const isAdmin = document.getElementById('usf-nivel').value === 'admin';
-  document.getElementById('usf-unidade-wrap').style.display = isAdmin ? 'none' : '';
-}
-async function carregarUsuariosAdmin(){
-  let usuarios = [];
-  try{
-    const res = await fetch(config.sheetsUrl, {
-      method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body: JSON.stringify({action:'listarUsuarios', token: session.token})
-    });
-    const data = await res.json();
-    usuarios = data.ok ? (data.usuarios || []) : [];
-  }catch(e){}
-  const tbody = document.getElementById('usuarios-tbody');
-  tbody.innerHTML = usuarios.length ? usuarios.map(u=>{
-    return `<tr onclick='preencherFormUsuario(${JSON.stringify(u).replace(/'/g,"&apos;")})'>
-      <td>${u.Nome}</td><td>${u.Usuario}</td><td>${nivelLabel_(u.Nivel)}</td><td>${u.Nivel==='admin'?'—':(u.UnidadeNome||'—')}</td><td class="mono">${u.IdConsultor||'—'}</td>
-    </tr>`;
-  }).join('') : '<tr><td colspan="5" class="empty">Nenhum usuário cadastrado.</td></tr>';
-}
-function preencherFormUsuario(u){
-  document.getElementById('usf-id').value = u.ID;
-  document.getElementById('usf-nome').value = u.Nome;
-  document.getElementById('usf-usuario').value = u.Usuario;
-  document.getElementById('usf-senha').value = '';
-  document.getElementById('usf-senha').type = 'password';
-  document.querySelector('.pw-toggle[onclick*="usf-senha"]').classList.remove('showing');
-  document.getElementById('usf-nivel').value = u.Nivel;
-  document.getElementById('usf-id-consultor').value = u.IdConsultor || '';
-  toggleUnidadeUsuarioField();
-  if(u.UnidadeID) document.getElementById('usf-unidade').value = u.UnidadeID;
-  document.getElementById('btn-excluir-usuario').style.display = '';
-}
-function limparFormUsuario(){
-  document.getElementById('usf-id').value = '';
-  document.getElementById('usf-nome').value = '';
-  document.getElementById('usf-usuario').value = '';
-  document.getElementById('usf-senha').value = '';
-  document.getElementById('usf-senha').type = 'password';
-  document.querySelector('.pw-toggle[onclick*="usf-senha"]').classList.remove('showing');
-  document.getElementById('usf-nivel').value = 'consultor';
-  document.getElementById('usf-id-consultor').value = '';
-  toggleUnidadeUsuarioField();
-  document.getElementById('btn-excluir-usuario').style.display = 'none';
-}
-async function excluirUsuario(){
-  const id = document.getElementById('usf-id').value;
-  if(!id) return;
-  const nome = document.getElementById('usf-nome').value;
-  if(!confirm('Excluir o usuário "'+nome+'"? Essa ação não pode ser desfeita.')) return;
-  const res = await fetch(config.sheetsUrl, {
-    method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body: JSON.stringify({action:'excluirUsuario', token: session.token, id})
-  });
-  const data = await res.json();
-  if(!data.ok){ alert(data.error || 'Não foi possível excluir esse usuário.'); return; }
-  await atualizarMapaConsultores_();
-  await carregarUsuariosAdmin();
-  limparFormUsuario();
-  renderAll();
-}
-async function salvarUsuario(ev){
-  ev.preventDefault();
-  const id = document.getElementById('usf-id').value;
-  const nivel = document.getElementById('usf-nivel').value;
-  const dados = {
-    Nome: document.getElementById('usf-nome').value.trim(),
-    Usuario: document.getElementById('usf-usuario').value.trim(),
-    Nivel: nivel,
-    UnidadeID: nivel==='admin' ? '' : document.getElementById('usf-unidade').value,
-    IdConsultor: document.getElementById('usf-id-consultor').value.trim()
-  };
-  const senha = document.getElementById('usf-senha').value;
-  if(senha) dados.Senha = senha;
-  if(!dados.Nome || !dados.Usuario) return;
-  if(!senha && !id){ alert('Defina uma senha para o novo usuário.'); return; }
-  const res = await fetch(config.sheetsUrl, {
-    method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body: JSON.stringify({action: id ? 'atualizarUsuario' : 'criarUsuario', token: session.token, id: id || undefined, dados})
-  });
-  const data = await res.json();
-  if(!data.ok){ alert(data.error || 'Não foi possível salvar esse usuário.'); return; }
-  await atualizarMapaConsultores_();
-  await carregarUsuariosAdmin();
-  limparFormUsuario();
-  renderAll();
-}
 
 (async function init(){
   await loadConfig();
@@ -2243,8 +2015,8 @@ async function salvarUsuario(ev){
   if(loadSession_()){
     await mostrarApp();
     const abrir = new URLSearchParams(location.search).get('abrir');
-    if(abrir === 'usuarios' && session.nivel === 'admin') abrirModalUsuarios();
-    if(abrir === 'unidades' && session.nivel === 'admin') abrirModalUnidades();
+    if(abrir === 'usuarios' && session.nivel === 'admin') GestaoShared.abrirUsuarios();
+    if(abrir === 'unidades' && session.nivel === 'admin') GestaoShared.abrirUnidades();
     if(abrir) history.replaceState(null, '', location.pathname);
   } else {
     window.location.href = '../';
