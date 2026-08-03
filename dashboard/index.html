@@ -337,24 +337,6 @@
   <main class="app-main">
 <div class="wrap" id="app-content">
 
-  <div class="content-topbar">
-    <span class="sync-status" id="sync-status">Carregando...</span>
-    <div class="unidade-seletor-wrap" id="unidade-seletor-wrap" hidden>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M5 21V7l8-4v18"></path><path d="M19 21V11l-6-4"></path></svg>
-      <select id="seletor-unidade" onchange="trocarUnidade(this.value)"></select>
-    </div>
-    <div class="unidade-fixa-chip" id="unidade-fixa-chip" hidden>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M5 21V7l8-4v18"></path><path d="M19 21V11l-6-4"></path></svg>
-      <span id="unidade-fixa-nome">—</span>
-    </div>
-    <button id="refresh-btn" class="icon-btn" onclick="manualRefresh()" title="Atualizar dados">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-    </button>
-    <button id="export-btn" class="icon-btn" onclick="exportExcel()" title="Exportar Excel">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-    </button>
-  </div>
-
   <div class="modal-overlay" id="modal-senha" style="display:none">
     <div class="modal-box">
       <h3 style="margin:0 0 14px;font-family:'Outfit';font-size:15px;">Trocar senha</h3>
@@ -707,15 +689,9 @@ let syncActiveCount = 0;
 function setSyncing(active){
   syncActiveCount += active ? 1 : -1;
   if(syncActiveCount<0) syncActiveCount = 0;
-  const btn = document.getElementById('refresh-btn');
-  if(!btn) return;
-  btn.classList.toggle('spinning', syncActiveCount>0);
+  if(window.SidebarShared) SidebarShared.setSincronizando(syncActiveCount>0);
 }
-function updateSyncStatus(){
-  const el = document.getElementById('sync-status');
-  if(config.sheetsUrl){ el.textContent = 'Sincronizado com Google Sheets'; el.style.color = 'var(--teal)'; }
-  else { el.textContent = 'Somente armazenamento local'; el.style.color = 'var(--text-faint)'; }
-}
+function updateSyncStatus(){ /* status textual removido junto com o header antigo */ }
 async function testConnection(){
   const msg = document.getElementById('cfg-msg');
   if(!config.sheetsUrl){ msg.textContent=''; return; }
@@ -767,10 +743,7 @@ async function manualRefresh(){
   const ok = await fetchFromSheets();
   renderAll();
   if(!ok && config.sheetsUrl){
-    const el = document.getElementById('sync-status');
-    el.textContent = 'Falha ao atualizar — tente de novo';
-    el.style.color = 'var(--rose)';
-    setTimeout(updateSyncStatus, 2500);
+    alert('Falha ao atualizar — tente de novo.');
   }
 }
 
@@ -1592,47 +1565,27 @@ function currentUnidadeObj(){
   }
   return {ID:session.unidadeId, Nome:session.unidadeNome, MetaOrcamento:session.metaOrcamento, MetaTas:session.metaTas, MetaTasConsultor:session.metaTasConsultor};
 }
-function hexParaRgb_(hex){
-  if(!hex) return null;
-  const m = String(hex).replace('#','').match(/^([0-9a-f]{6})$/i);
-  if(!m) return null;
-  const n = parseInt(m[1],16);
-  return { r:(n>>16)&255, g:(n>>8)&255, b:n&255 };
-}
 function renderUnidadeArea(){
-  const multi = session.nivel === 'admin' && session.unidades.length > 1;
-  const seletorWrap = document.getElementById('unidade-seletor-wrap');
-  const fixaChip = document.getElementById('unidade-fixa-chip');
-  seletorWrap.hidden = !multi;
-  fixaChip.hidden = multi;
-  if(multi){
-    const sel = document.getElementById('seletor-unidade');
-    sel.innerHTML = session.unidades.map(u=>`<option value="${u.ID}" ${u.ID===session.unidadeId?'selected':''}>${u.Nome}</option>`).join('');
-    aplicarCorSeletorUnidade_();
-  } else {
-    document.getElementById('unidade-fixa-nome').textContent = session.unidadeNome || 'Nenhuma unidade';
-  }
-}
-function aplicarCorSeletorUnidade_(){
-  const sel = document.getElementById('seletor-unidade');
-  if(!sel) return;
-  const atual = currentUnidadeObj();
-  const rgb = hexParaRgb_(atual && atual.Cor);
-  if(rgb){
-    sel.style.background = `rgba(${rgb.r},${rgb.g},${rgb.b},0.14)`;
-    sel.style.borderColor = atual.Cor;
-  } else {
-    sel.style.background = '';
-    sel.style.borderColor = '';
-  }
+  const lista = session.nivel === 'admin'
+    ? session.unidades.map(u=>({id:u.ID, nome:u.Nome}))
+    : [{id: session.unidadeId, nome: session.unidadeNome || 'Nenhuma unidade'}];
+  if(window.SidebarShared) SidebarShared.setUnidades(lista, session.unidadeId);
 }
 async function renderUserChip(){
   if(window.SidebarShared){
+    const lista = session.nivel === 'admin'
+      ? session.unidades.map(u=>({id:u.ID, nome:u.Nome}))
+      : [{id: session.unidadeId, nome: session.unidadeNome || 'Nenhuma unidade'}];
     await SidebarShared.mount('dashboard', {
       onSair: sair,
       onTrocarSenha: abrirModalSenha,
       onGerenciarUsuarios: session.nivel === 'admin' ? function(){ GestaoShared.abrirUsuarios(); } : null,
-      onGerenciarUnidades: session.nivel === 'admin' ? function(){ GestaoShared.abrirUnidades(); } : null
+      onGerenciarUnidades: session.nivel === 'admin' ? function(){ GestaoShared.abrirUnidades(); } : null,
+      onExportar: exportExcel,
+      unidades: lista,
+      unidadeAtual: session.unidadeId,
+      onTrocarUnidade: trocarUnidade,
+      onAtualizar: manualRefresh
     });
     SidebarShared.setUser(session.nome, session.nivel === 'admin' ? 'Administrador' : (session.unidadeNome || '—'));
   }
@@ -1679,7 +1632,6 @@ async function trocarUnidade(id){
   const u = session.unidades.find(x=>x.ID===id);
   session.unidadeNome = u ? u.Nome : '';
   saveSession_();
-  aplicarCorSeletorUnidade_();
   await carregarDadosUnidadeAtual();
 }
 async function carregarDadosUnidadeAtual(){
