@@ -7,9 +7,8 @@
 .app-main{flex:1;min-width:0;}
 
 #shared-sidebar-root{width:224px;flex-shrink:0;background:#FFFFFF;border-right:1px solid #DCE4F0;display:flex;flex-direction:column;padding:20px 14px;position:sticky;top:0;height:100vh;overflow-y:auto;}
-#shared-sidebar-root .sidebar-brand{display:flex;align-items:center;gap:10px;padding:0 6px;margin-bottom:26px;}
-#shared-sidebar-root .sidebar-logo{height:28px;width:auto;flex-shrink:0;}
-#shared-sidebar-root .sidebar-brand span{font-family:'Outfit',sans-serif;font-weight:700;font-size:13.5px;color:#101827;line-height:1.2;}
+#shared-sidebar-root .sidebar-brand{padding:0 6px;margin-bottom:26px;}
+#shared-sidebar-root .sidebar-logo{width:100%;height:auto;display:block;}
 #shared-sidebar-root .sidebar-nav{display:flex;flex-direction:column;gap:4px;flex:1;}
 #shared-sidebar-root .sidebar-link{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;color:#586376;font-family:'Manrope',sans-serif;font-weight:600;font-size:13px;text-decoration:none;transition:background .15s ease,color .15s ease;}
 #shared-sidebar-root .sidebar-link:hover{background:#F5F8FC;color:#101827;}
