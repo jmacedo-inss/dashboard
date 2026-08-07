@@ -3059,13 +3059,25 @@ Object.assign(window, {
   function linhaParaPedido(row) {
     var obj = { ID: row.id };
     Object.keys(COLUNA_PARA_CAMPO).forEach(function (col) { obj[COLUNA_PARA_CAMPO[col]] = row[col]; });
+    if (row.valor_pago !== null && row.valor_pago !== undefined) {
+      obj['Valor Pago'] = 'R$ ' + Number(row.valor_pago).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    } else {
+      obj['Valor Pago'] = '';
+    }
     return obj;
   }
   function camposParaColunas(dados) {
     var row = {};
     Object.keys(dados || {}).forEach(function (campo) {
       var col = CAMPO_PARA_COLUNA[campo];
-      if (col) row[col] = dados[campo];
+      if (!col) return;
+      var valor = dados[campo];
+      if (campo === 'Valor Pago') {
+        var digitos = String(valor || '').replace(/\D/g, '');
+        row[col] = digitos ? parseInt(digitos, 10) / 100 : null;
+      } else {
+        row[col] = valor;
+      }
     });
     return row;
   }
