@@ -39,6 +39,8 @@
   .pw-toggle.showing .icon-on{display:none;}
   .pw-toggle.showing .icon-off{display:block;}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="shared/supabase-client.js"></script>
 </head>
 <body>
 
@@ -62,39 +64,10 @@
 </div>
 
 <script>
-const API_URL_PADRAO = 'https://script.google.com/macros/s/AKfycby9ZBcnSaIIL9FqU0qHLCnBlhvIKVR4yYs3B-3suuSrUCa3s_uzwQRM1r3xzqjoJbjX/exec';
-const apiUrl = (window.localStorage && localStorage.getItem('pedidos_api_url')) || API_URL_PADRAO;
-
 function togglePw(inputId, btn){
   const input = document.getElementById(inputId);
   const showing = btn.classList.toggle('showing');
   input.type = showing ? 'text' : 'password';
-}
-
-function salvarSessao(dados){
-  if(!window.localStorage) return;
-  try{
-    localStorage.setItem('pedidos_token', dados.token);
-    localStorage.setItem('pedidos_nome', dados.nome);
-    localStorage.setItem('pedidos_usuario', dados.usuario);
-    localStorage.setItem('pedidos_nivel', dados.nivel);
-    if(dados.nivel === 'admin'){
-      const unidades = dados.unidades || [];
-      localStorage.setItem('pedidos_unidades', JSON.stringify(unidades));
-      localStorage.setItem('pedidos_unidade_id', unidades.length ? unidades[0].ID : '');
-      localStorage.setItem('pedidos_unidade_nome', unidades.length ? unidades[0].Nome : '');
-      localStorage.setItem('pedidos_codigo_asc', '');
-    } else {
-      localStorage.setItem('pedidos_unidades', JSON.stringify([]));
-      localStorage.setItem('pedidos_unidade_id', dados.unidadeId || '');
-      localStorage.setItem('pedidos_unidade_nome', dados.unidadeNome || '');
-      localStorage.setItem('pedidos_codigo_asc', dados.codigoAsc || '');
-    }
-    localStorage.setItem('pedidos_id_consultor', dados.idConsultor || '');
-    localStorage.setItem('pedidos_meta_orcamento', dados.metaOrcamento || 0);
-    localStorage.setItem('pedidos_meta_tas', dados.metaTas || 0);
-    localStorage.setItem('pedidos_meta_tas_consultor', dados.metaTasConsultor || 0);
-  }catch(e){}
 }
 
 async function fazerLogin(){
@@ -106,14 +79,8 @@ async function fazerLogin(){
   const btn = document.getElementById('btn-entrar');
   btn.disabled = true; btn.textContent = 'Entrando...';
   try{
-    const res = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {'Content-Type': 'text/plain;charset=utf-8'},
-      body: JSON.stringify({action:'login', usuario, senha})
-    });
-    const data = await res.json();
-    if(!data.ok){ erroEl.textContent = data.error || 'Não foi possível entrar.'; return; }
-    salvarSessao(data);
+    const res = await SupabaseShared.entrar(usuario, senha);
+    if(!res.ok){ erroEl.textContent = res.error || 'Não foi possível entrar.'; return; }
     window.location.href = 'dashboard/';
   }catch(e){
     erroEl.textContent = 'Erro de conexão. Tente novamente.';
@@ -125,10 +92,12 @@ async function fazerLogin(){
 document.getElementById('login-senha').addEventListener('keydown', function(e){ if(e.key === 'Enter') fazerLogin(); });
 document.getElementById('login-usuario').addEventListener('keydown', function(e){ if(e.key === 'Enter') document.getElementById('login-senha').focus(); });
 
-// Se já existe uma sessão válida guardada, pula direto pro dashboard.
-if(window.localStorage && localStorage.getItem('pedidos_token')){
-  window.location.href = 'dashboard/';
-}
+// Se já existe uma sessão válida (o cliente do Supabase guarda isso sozinho), pula direto pro dashboard.
+SupabaseShared.sessaoAtual().then(function(sessao){
+  if(sessao){
+    window.location.href = 'dashboard/';
+  }
+});
 </script>
 </body>
 </html>
