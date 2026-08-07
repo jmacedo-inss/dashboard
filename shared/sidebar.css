@@ -27,7 +27,7 @@
 #shared-sidebar-root .sidebar-unidade-btn:focus-visible{box-shadow:0 0 0 2px rgba(46,75,149,.28);}
 #shared-sidebar-root .sidebar-unidade-caret{width:13px;height:13px;flex-shrink:0;color:#8994A8;transition:transform .2s ease;}
 #shared-sidebar-root .sidebar-unidade-dropdown.open .sidebar-unidade-caret{transform:rotate(180deg);}
-#shared-sidebar-root .sidebar-unidade-menu{position:absolute;left:0;top:calc(100% + 6px);min-width:100%;max-width:240px;max-height:240px;overflow-y:auto;background:#FFFFFF;border:1px solid #DCE4F0;border-radius:10px;box-shadow:0 1em 2.2em rgba(20,30,60,0.14);padding:6px;z-index:60;transform-origin:top left;opacity:0;transform:scale(.96) translateY(-4px);pointer-events:none;transition:opacity .16s ease,transform .16s ease;}
+#shared-sidebar-root .sidebar-unidade-menu{position:absolute;left:0;bottom:calc(100% + 6px);min-width:100%;max-width:240px;max-height:240px;overflow-y:auto;background:#FFFFFF;border:1px solid #DCE4F0;border-radius:10px;box-shadow:0 1em 2.2em rgba(20,30,60,0.14);padding:6px;z-index:60;transform-origin:bottom left;opacity:0;transform:scale(.96) translateY(4px);pointer-events:none;transition:opacity .16s ease,transform .16s ease;}
 #shared-sidebar-root .sidebar-unidade-dropdown.open .sidebar-unidade-menu{opacity:1;transform:scale(1) translateY(0);pointer-events:auto;}
 #shared-sidebar-root .sidebar-unidade-item{display:block;width:100%;text-align:left;padding:8px 10px;border-radius:7px;background:none;border:none;color:#586376;font-family:'Manrope',sans-serif;font-weight:600;font-size:12.5px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 #shared-sidebar-root .sidebar-unidade-item:hover{background:#F5F8FC;color:#101827;}
