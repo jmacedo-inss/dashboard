@@ -566,6 +566,8 @@ body{margin:0;}
 </style>
 <link rel="stylesheet" href="../shared/sidebar.css">
 <link rel="stylesheet" href="../shared/gestao.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../shared/supabase-client.js"></script>
 <script src="../shared/gestao.js"></script>
 <script src="../shared/sidebar.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
@@ -950,16 +952,36 @@ body{margin:0;}
   var selecionados = new Set();
   var ultimosFiltrados = [];
 
-  var sessao = { token: '', nome: '', usuario: '', nivel: '', unidadeId: '', unidadeNome: '', unidades: [], codigoAsc: '' };
-  if (window.localStorage) {
-    sessao.token = localStorage.getItem('pedidos_token') || '';
-    sessao.nome = localStorage.getItem('pedidos_nome') || '';
-    sessao.usuario = localStorage.getItem('pedidos_usuario') || '';
-    sessao.nivel = localStorage.getItem('pedidos_nivel') || '';
-    sessao.unidadeId = localStorage.getItem('pedidos_unidade_id') || '';
-    sessao.unidadeNome = localStorage.getItem('pedidos_unidade_nome') || '';
-    sessao.codigoAsc = localStorage.getItem('pedidos_codigo_asc') || '';
-    try { sessao.unidades = JSON.parse(localStorage.getItem('pedidos_unidades') || '[]'); } catch (e) { sessao.unidades = []; }
+  var sessao = { nome: '', usuario: '', nivel: '', unidadeId: '', unidadeNome: '', unidades: [], codigoAsc: '' };
+
+  /** Preenche `sessao` a partir do perfil logado no Supabase.
+   *  Se for admin, também busca a lista completa de unidades. */
+  function carregarSessaoDoPerfil(perfil) {
+    sessao.nome = perfil.nome;
+    sessao.usuario = perfil.usuario;
+    sessao.nivel = perfil.nivel;
+    if (perfil.nivel === 'admin') {
+      return SupabaseShared.client.from('unidades').select('*').order('nome').then(function (res) {
+        var unidades = res.data || [];
+        sessao.unidades = unidades.map(function (u) {
+          return { ID: u.id, Nome: u.nome, Cor: u.cor || '', CodigoASC: u.codigo_asc || '',
+            MetaOrcamento: u.meta_orcamento || 0, MetaTas: u.meta_tas || 0, MetaTasConsultor: u.meta_tas_consultor || 0 };
+        });
+        var lembrada = null;
+        try { lembrada = window.localStorage && localStorage.getItem('express_unidade_selecionada'); } catch (e) {}
+        var atual = null;
+        for (var i = 0; i < sessao.unidades.length; i++) { if (sessao.unidades[i].ID === lembrada) { atual = sessao.unidades[i]; break; } }
+        if (!atual) atual = sessao.unidades[0];
+        sessao.unidadeId = atual ? atual.ID : '';
+        sessao.unidadeNome = atual ? atual.Nome : '';
+      });
+    }
+    sessao.unidades = [];
+    var u = perfil.unidade;
+    sessao.unidadeId = u ? u.id : '';
+    sessao.unidadeNome = u ? u.nome : '';
+    sessao.codigoAsc = u ? (u.codigo_asc || '') : '';
+    return Promise.resolve();
   }
 
   /**
@@ -986,62 +1008,10 @@ body{margin:0;}
   function statusSlug(s) { return s.replace(/[^a-zA-Z]/g, ''); }
 
   // -------- Autenticação --------
-  function salvarSessaoLocal(dadosLogin) {
-    sessao.token = dadosLogin.token;
-    sessao.nome = dadosLogin.nome;
-    sessao.usuario = dadosLogin.usuario;
-    sessao.nivel = dadosLogin.nivel;
-    if (dadosLogin.nivel === 'admin') {
-      sessao.unidades = dadosLogin.unidades || [];
-      // Mantém a unidade que já estava selecionada antes (se ainda existir), senão usa a primeira.
-      var aindaExiste = sessao.unidades.some(function (u) { return u.ID === sessao.unidadeId; });
-      if (!aindaExiste) {
-        sessao.unidadeId = sessao.unidades.length ? sessao.unidades[0].ID : '';
-        sessao.unidadeNome = sessao.unidades.length ? sessao.unidades[0].Nome : '';
-      }
-      sessao.codigoAsc = '';
-    } else {
-      sessao.unidadeId = dadosLogin.unidadeId || '';
-      sessao.unidadeNome = dadosLogin.unidadeNome || '';
-      sessao.unidades = [];
-      sessao.codigoAsc = dadosLogin.codigoAsc || '';
-    }
-    if (window.localStorage) {
-      localStorage.setItem('pedidos_token', sessao.token);
-      localStorage.setItem('pedidos_nome', sessao.nome);
-      localStorage.setItem('pedidos_usuario', sessao.usuario);
-      localStorage.setItem('pedidos_nivel', sessao.nivel);
-      localStorage.setItem('pedidos_unidade_id', sessao.unidadeId);
-      localStorage.setItem('pedidos_unidade_nome', sessao.unidadeNome);
-      localStorage.setItem('pedidos_unidades', JSON.stringify(sessao.unidades));
-      localStorage.setItem('pedidos_codigo_asc', sessao.codigoAsc);
-    }
-  }
-
   function selecionarUnidade(unidadeId, unidadeNome) {
     sessao.unidadeId = unidadeId;
     sessao.unidadeNome = unidadeNome;
-    if (window.localStorage) {
-      localStorage.setItem('pedidos_unidade_id', unidadeId);
-      localStorage.setItem('pedidos_unidade_nome', unidadeNome);
-    }
-  }
-
-  function encerrarSessaoLocal() {
-    sessao.token = ''; sessao.nome = ''; sessao.usuario = ''; sessao.nivel = '';
-    sessao.unidadeId = ''; sessao.unidadeNome = ''; sessao.unidades = [];
-    sessao.codigoAsc = '';
-    if (window.localStorage) {
-      localStorage.removeItem('pedidos_token');
-      localStorage.removeItem('pedidos_nome');
-      localStorage.removeItem('pedidos_usuario');
-      localStorage.removeItem('pedidos_nivel');
-      localStorage.removeItem('pedidos_unidade_id');
-      localStorage.removeItem('pedidos_unidade_nome');
-      localStorage.removeItem('pedidos_unidades');
-      localStorage.removeItem('pedidos_codigo_asc');
-      localStorage.removeItem('pedidos_senha_ofs');
-    }
+    try { if (window.localStorage) localStorage.setItem('express_unidade_selecionada', unidadeId); } catch (e) {}
   }
 
   function iniciais(nome) {
@@ -1090,52 +1060,10 @@ body{margin:0;}
     carregar();
   }
 
-  function definirCarregandoLogin(carregando) {
-    el.btnEntrar.disabled = carregando;
-    el.btnEntrarSpinner.hidden = !carregando;
-    el.btnEntrarTexto.textContent = carregando ? 'Entrando…' : 'Entrar';
-  }
-
-  function fazerLogin() {
-    var usuario = el.loginUsuario.value.trim();
-    var senha = el.loginSenha.value;
-    if (!usuario || !senha) { el.loginErro.textContent = 'Preencha usuário e senha.'; return; }
-    definirCarregandoLogin(true);
-    el.loginErro.textContent = '';
-    if (!apiUrl) {
-      el.loginErro.textContent = 'A URL do sistema ainda não foi configurada. Fale com o administrador.';
-      definirCarregandoLogin(false);
-      return;
-    }
-    fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'login', usuario: usuario, senha: senha })
-    }).then(function (r) { return r.json(); })
-      .then(function (res) {
-        definirCarregandoLogin(false);
-        if (res.ok) {
-          salvarSessaoLocal(res);
-          mostrarApp();
-        } else {
-          el.loginErro.textContent = res.error || 'Não foi possível entrar.';
-        }
-      }).catch(function (err) {
-        definirCarregandoLogin(false);
-        el.loginErro.textContent = 'Erro de conexão: ' + err.message;
-      });
-  }
-
   function fazerLogout() {
-    apiPost({ action: 'logout' }).then(function () {
-      encerrarSessaoLocal();
-      mostrarLogin();
-    });
+    try { if (window.localStorage) localStorage.removeItem('express_unidade_selecionada'); } catch (e) {}
+    SupabaseShared.sair().then(function () { window.location.href = '../'; });
   }
-
-  el.btnEntrar.onclick = fazerLogin;
-  el.loginSenha.addEventListener('keydown', function (e) { if (e.key === 'Enter') fazerLogin(); });
-  el.loginUsuario.addEventListener('keydown', function (e) { if (e.key === 'Enter') el.loginSenha.focus(); });
 
   // -------- Trocar senha --------
   function abrirModalSenha() {
@@ -1148,17 +1076,16 @@ body{margin:0;}
   function fecharModalSenha() { el.modalSenha.classList.remove('open'); }
 
   function salvarNovaSenha() {
-    var atual = el.senhaAtualInput.value;
     var nova = el.senhaNovaInput.value;
     var confirmar = el.senhaNovaConfirmInput.value;
-    if (!atual || !nova || !confirmar) { el.senhaErro.textContent = 'Preencha todos os campos.'; return; }
+    if (!nova || !confirmar) { el.senhaErro.textContent = 'Preencha a nova senha nos dois campos.'; return; }
     if (nova.length < 6) { el.senhaErro.textContent = 'A nova senha deve ter ao menos 6 caracteres.'; return; }
     if (nova !== confirmar) { el.senhaErro.textContent = 'A confirmação não bate com a nova senha.'; return; }
     el.salvarSenha.disabled = true;
-    apiPost({ action: 'trocarSenha', senhaAtual: atual, senhaNova: nova }).then(function (res) {
+    SupabaseShared.client.auth.updateUser({ password: nova }).then(function (res) {
       el.salvarSenha.disabled = false;
-      if (res.ok) { fecharModalSenha(); toast('Senha alterada com sucesso', 'ok'); }
-      else el.senhaErro.textContent = res.error || 'Não foi possível trocar a senha.';
+      if (!res.error) { fecharModalSenha(); toast('Senha alterada com sucesso', 'ok'); }
+      else el.senhaErro.textContent = res.error.message || 'Não foi possível trocar a senha.';
     });
   }
 
@@ -1267,9 +1194,10 @@ body{margin:0;}
 
   function tratarSessaoInvalida(res) {
     if (res && res.semSessao) {
-      toast('Sua sessão expirou. Faça login novamente.', 'err');
-      encerrarSessaoLocal();
-      mostrarLogin();
+      // Login já é 100% via Supabase agora — a "sessão" do Apps Script antigo
+      // não existe mais pra esse usuário, então isso só significa que os
+      // dados de pedidos ainda não foram migrados (próxima etapa). Não
+      // redireciona pra raiz por causa disso.
     }
   }
 
@@ -2417,11 +2345,13 @@ body{margin:0;}
 
   [el.modalPedido, el.modalConfig].forEach(configurarFechamentoPorFora);
 
-  if (sessao.token) {
-    mostrarApp();
-  } else {
-    window.location.href = '../';
-  }
+  SupabaseShared.sessaoAtual().then(function (sessaoSupabase) {
+    if (!sessaoSupabase) { window.location.href = '../'; return; }
+    SupabaseShared.buscarPerfil().then(function (perfil) {
+      if (!perfil) { window.location.href = '../'; return; }
+      carregarSessaoDoPerfil(perfil).then(mostrarApp);
+    });
+  });
 })();
 </script>
 </body>
