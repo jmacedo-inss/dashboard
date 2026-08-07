@@ -37,8 +37,8 @@
   }
 
   function preencherTemplate(tpl, activeKey){
-    var dashHref = activeKey === 'dashboard' ? './' : '../dashboard/';
-    var pedHref = activeKey === 'pedidos' ? './' : '../express/';
+    var dashHref = '../dashboard/';
+    var pedHref = '../express/';
     return tpl
       .replace(/__LOGO__/g, LOGO)
       .replace(/__DASH_HREF__/g, dashHref)
@@ -129,6 +129,21 @@
       var syncBtn = document.getElementById('sb-sync-btn');
       if(!syncBtn) return;
       syncBtn.classList.toggle('spinning', !!ligado);
+    },
+    setActive: function(activeKey){
+      var links = document.querySelectorAll('#shared-sidebar-root .sidebar-nav a');
+      if(links[0]) links[0].classList.toggle('active', activeKey === 'dashboard');
+      if(links[1]) links[1].classList.toggle('active', activeKey === 'pedidos');
+    },
+    onNavClick: function(fn){
+      var links = document.querySelectorAll('#shared-sidebar-root .sidebar-nav a');
+      var chaves = ['dashboard', 'pedidos'];
+      Array.prototype.forEach.call(links, function(a, i){
+        a.addEventListener('click', function(e){
+          var seguir = fn(chaves[i], a.getAttribute('href'), e);
+          if(seguir === false) e.preventDefault();
+        });
+      });
     }
   };
 })();
