@@ -18,6 +18,8 @@
 <link rel="stylesheet" href="../shared/sidebar.css">
 <link rel="stylesheet" href="../shared/gestao.css">
 <script src="../shared/gestao.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../shared/supabase-client.js"></script>
 <script src="../shared/sidebar.js"></script>
 <style>
   :root{
@@ -589,7 +591,7 @@ let records = [];
 let config = {sheetsUrl: (window.localStorage && localStorage.getItem('pedidos_api_url')) || DEFAULT_SHEETS_URL};
 let relogioOffsetMs = 0;
 let selectedDate = todayStr();
-let session = {token:'', id:'', nome:'', usuario:'', nivel:'', unidadeId:'', unidadeNome:'', unidades:[], codigoAsc:'', idConsultor:'', metaOrcamento:0, metaTas:0, metaTasConsultor:0};
+let session = {nome:'', usuario:'', nivel:'', unidadeId:'', unidadeNome:'', unidades:[], codigoAsc:'', idConsultor:'', metaOrcamento:0, metaTas:0, metaTasConsultor:0};
 let unidadesTodasCache = [];
 let pendingImport = null;
 function agoraServidor(){ return new Date(Date.now() + relogioOffsetMs); }
@@ -1523,42 +1525,6 @@ document.getElementById('f-data').addEventListener('change', ()=>{
   renderLancar();
 });
 
-function saveSession_(){
-  if(!window.localStorage) return;
-  try{
-    localStorage.setItem('pedidos_token', session.token);
-    localStorage.setItem('pedidos_nome', session.nome);
-    localStorage.setItem('pedidos_usuario', session.usuario);
-    localStorage.setItem('pedidos_nivel', session.nivel);
-    localStorage.setItem('pedidos_unidade_id', session.unidadeId);
-    localStorage.setItem('pedidos_unidade_nome', session.unidadeNome);
-    localStorage.setItem('pedidos_unidades', JSON.stringify(session.unidades));
-    localStorage.setItem('pedidos_codigo_asc', session.codigoAsc || '');
-    localStorage.setItem('pedidos_id_consultor', session.idConsultor || '');
-    localStorage.setItem('pedidos_meta_orcamento', session.metaOrcamento || 0);
-    localStorage.setItem('pedidos_meta_tas', session.metaTas || 0);
-    localStorage.setItem('pedidos_meta_tas_consultor', session.metaTasConsultor || 0);
-  }catch(e){}
-}
-function loadSession_(){
-  if(!window.localStorage) return false;
-  try{
-    session.token = localStorage.getItem('pedidos_token') || '';
-    session.nome = localStorage.getItem('pedidos_nome') || '';
-    session.usuario = localStorage.getItem('pedidos_usuario') || '';
-    session.nivel = localStorage.getItem('pedidos_nivel') || '';
-    session.unidadeId = localStorage.getItem('pedidos_unidade_id') || '';
-    session.unidadeNome = localStorage.getItem('pedidos_unidade_nome') || '';
-    session.codigoAsc = localStorage.getItem('pedidos_codigo_asc') || '';
-    session.idConsultor = localStorage.getItem('pedidos_id_consultor') || '';
-    session.metaOrcamento = Number(localStorage.getItem('pedidos_meta_orcamento')) || 0;
-    session.metaTas = Number(localStorage.getItem('pedidos_meta_tas')) || 0;
-    session.metaTasConsultor = Number(localStorage.getItem('pedidos_meta_tas_consultor')) || 0;
-    try{ session.unidades = JSON.parse(localStorage.getItem('pedidos_unidades') || '[]'); }catch(e){ session.unidades = []; }
-    return !!session.token;
-  }catch(e){}
-  return false;
-}
 function currentUnidadeObj(){
   if(session.nivel === 'admin'){
     return session.unidades.find(u=>u.ID===session.unidadeId) || session.unidades[0] || null;
@@ -1597,33 +1563,55 @@ function abrirModalSenha(){
 }
 async function salvarNovaSenha(ev){
   ev.preventDefault();
-  const senhaAtual = document.getElementById('senha-atual').value;
   const senhaNova = document.getElementById('senha-nova').value;
-  if(!senhaAtual || !senhaNova) return;
-  const res = await fetch(config.sheetsUrl, {
-    method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body: JSON.stringify({action:'trocarSenha', token: session.token, senhaAtual, senhaNova})
-  });
-  const data = await res.json();
-  if(!data.ok){ alert(data.error || 'Não foi possível trocar a senha.'); return; }
+  if(!senhaNova){ return; }
+  const { error } = await SupabaseShared.client.auth.updateUser({ password: senhaNova });
+  if(error){ alert('Não foi possível trocar a senha: ' + error.message); return; }
   fecharModal('modal-senha');
   alert('Senha atualizada.');
+}
+
+/** Preenche `session` a partir do perfil logado no Supabase.
+ *  Se for admin, também busca a lista completa de unidades. */
+async function carregarSessaoDoPerfil_(perfil){
+  session.nome = perfil.nome;
+  session.usuario = perfil.usuario;
+  session.nivel = perfil.nivel;
+  session.idConsultor = perfil.id_consultor || '';
+
+  if(perfil.nivel === 'admin'){
+    const { data: unidades } = await SupabaseShared.client.from('unidades').select('*').order('nome');
+    session.unidades = (unidades || []).map(u=>({
+      ID: u.id, Nome: u.nome, Cor: u.cor || '', CodigoASC: u.codigo_asc || '',
+      MetaOrcamento: u.meta_orcamento || 0, MetaTas: u.meta_tas || 0, MetaTasConsultor: u.meta_tas_consultor || 0
+    }));
+    const atual = session.unidades[0];
+    session.unidadeId = atual ? atual.ID : '';
+    session.unidadeNome = atual ? atual.Nome : '';
+  } else {
+    session.unidades = [];
+    const u = perfil.unidade;
+    session.unidadeId = u ? u.id : '';
+    session.unidadeNome = u ? u.nome : '';
+    session.codigoAsc = u ? (u.codigo_asc || '') : '';
+    session.metaOrcamento = u ? (u.meta_orcamento || 0) : 0;
+    session.metaTas = u ? (u.meta_tas || 0) : 0;
+    session.metaTasConsultor = u ? (u.meta_tas_consultor || 0) : 0;
+  }
 }
 async function atualizarUnidadesSessao_(){
   if(session.nivel !== 'admin') return;
   try{
-    const res = await fetch(config.sheetsUrl, {
-      method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body: JSON.stringify({action:'listarUnidades', token: session.token})
-    });
-    const data = await res.json();
-    if(!data.ok) return;
-    session.unidades = data.unidades || [];
+    const { data: unidades, error } = await SupabaseShared.client.from('unidades').select('*').order('nome');
+    if(error) return;
+    session.unidades = (unidades || []).map(u=>({
+      ID: u.id, Nome: u.nome, Cor: u.cor || '', CodigoASC: u.codigo_asc || '',
+      MetaOrcamento: u.meta_orcamento || 0, MetaTas: u.meta_tas || 0, MetaTasConsultor: u.meta_tas_consultor || 0
+    }));
     if(!session.unidades.some(u=>u.ID===session.unidadeId) && session.unidades.length>0){
       session.unidadeId = session.unidades[0].ID;
       session.unidadeNome = session.unidades[0].Nome;
     }
-    saveSession_();
     renderUnidadeArea();
   }catch(e){ /* mantém a lista anterior em caso de falha */ }
 }
@@ -1631,7 +1619,6 @@ async function trocarUnidade(id){
   session.unidadeId = id;
   const u = session.unidades.find(x=>x.ID===id);
   session.unidadeNome = u ? u.Nome : '';
-  saveSession_();
   await carregarDadosUnidadeAtual();
 }
 async function carregarDadosUnidadeAtual(){
@@ -1649,49 +1636,8 @@ async function mostrarApp(){
   await atualizarUnidadesSessao_();
   await carregarDadosUnidadeAtual();
 }
-async function fazerLogin(){
-  const usuario = document.getElementById('login-usuario').value.trim();
-  const senha = document.getElementById('login-senha').value;
-  const erroEl = document.getElementById('login-erro');
-  erroEl.textContent = '';
-  if(!usuario || !senha){ erroEl.textContent = 'Preencha usuário e senha.'; return; }
-  const btn = document.getElementById('btn-entrar');
-  btn.disabled = true; btn.textContent = 'Entrando...';
-  try{
-    const res = await fetch(config.sheetsUrl, {
-      method:'POST',
-      headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body: JSON.stringify({action:'login', usuario, senha})
-    });
-    const data = await res.json();
-    if(!data.ok){ erroEl.textContent = data.error || 'Não foi possível entrar.'; return; }
-    session = {
-      token: data.token, id: data.usuarioId || '', nome: data.nome, usuario: data.usuario, nivel: data.nivel,
-      unidadeId: data.nivel==='admin' ? ((data.unidades && data.unidades[0] && data.unidades[0].ID) || '') : (data.unidadeId || ''),
-      unidadeNome: data.nivel==='admin' ? ((data.unidades && data.unidades[0] && data.unidades[0].Nome) || '') : (data.unidadeNome || ''),
-      unidades: data.nivel==='admin' ? (data.unidades || []) : [],
-      codigoAsc: data.codigoAsc || '', idConsultor: data.idConsultor || '',
-      metaOrcamento: data.metaOrcamento || 0, metaTas: data.metaTas || 0, metaTasConsultor: data.metaTasConsultor || 0
-    };
-    saveSession_();
-    await mostrarApp();
-  }catch(e){
-    erroEl.textContent = 'Erro de conexão. Tente novamente.';
-  }finally{
-    btn.disabled = false; btn.textContent = 'Entrar';
-  }
-}
 function sair(){
-  if(session.token){
-    fetch(config.sheetsUrl, {
-      method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body: JSON.stringify({action:'logout', token: session.token})
-    }).catch(()=>{});
-  }
-  if(window.localStorage){
-    ['pedidos_token','pedidos_nome','pedidos_usuario','pedidos_nivel','pedidos_unidade_id','pedidos_unidade_nome','pedidos_unidades','pedidos_codigo_asc','pedidos_id_consultor','pedidos_meta_orcamento','pedidos_meta_tas','pedidos_meta_tas_consultor'].forEach(k=>localStorage.removeItem(k));
-  }
-  location.reload();
+  SupabaseShared.sair().then(function(){ window.location.href = '../'; });
 }
 function fecharModal(id){ document.getElementById(id).style.display = 'none'; }
 function abrirModalSuspeitos(mk){
@@ -1964,15 +1910,16 @@ function substituirLinhasXml_(doc, aoa){
     if(fDataEl) fDataEl.value = selectedDate;
     if(session.unidadeId) renderAll();
   });
-  if(loadSession_()){
-    await mostrarApp();
-    const abrir = new URLSearchParams(location.search).get('abrir');
-    if(abrir === 'usuarios' && session.nivel === 'admin') GestaoShared.abrirUsuarios();
-    if(abrir === 'unidades' && session.nivel === 'admin') GestaoShared.abrirUnidades();
-    if(abrir) history.replaceState(null, '', location.pathname);
-  } else {
-    window.location.href = '../';
-  }
+  const sessaoSupabase = await SupabaseShared.sessaoAtual();
+  if(!sessaoSupabase){ window.location.href = '../'; return; }
+  const perfil = await SupabaseShared.buscarPerfil();
+  if(!perfil){ window.location.href = '../'; return; }
+  await carregarSessaoDoPerfil_(perfil);
+  await mostrarApp();
+  const abrir = new URLSearchParams(location.search).get('abrir');
+  if(abrir === 'usuarios' && session.nivel === 'admin') GestaoShared.abrirUsuarios();
+  if(abrir === 'unidades' && session.nivel === 'admin') GestaoShared.abrirUnidades();
+  if(abrir) history.replaceState(null, '', location.pathname);
 })();
 </script>
 </body>
