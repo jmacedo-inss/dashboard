@@ -1618,8 +1618,6 @@ async function carregarDadosUnidadeAtual(){
   renderAll();
 }
 async function mostrarApp(){
-  document.getElementById('login-overlay').style.display = 'none';
-  document.getElementById('app-shell').hidden = false;
   renderUnidadeArea();
   await renderUserChip();
   await atualizarUnidadesSessao_();
