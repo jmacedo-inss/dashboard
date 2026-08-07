@@ -47,6 +47,29 @@
       .replace(/__PED_ACTIVE__/g, activeKey === 'pedidos' ? ' active' : '');
   }
 
+  function moverIndicador_(){
+    var ativo = document.querySelector('#shared-sidebar-root .sidebar-nav a.active');
+    var indicador = document.getElementById('sb-nav-indicator');
+    if(!ativo || !indicador) return;
+    var horizontal = window.matchMedia('(max-width: 760px)').matches;
+    if(horizontal){
+      indicador.style.right = 'auto';
+      indicador.style.left = '0';
+      indicador.style.transform = 'translateX(' + ativo.offsetLeft + 'px)';
+      indicador.style.width = ativo.offsetWidth + 'px';
+      indicador.style.height = '';
+    } else {
+      indicador.style.right = '';
+      indicador.style.left = '';
+      indicador.style.transform = 'translateY(' + ativo.offsetTop + 'px)';
+      indicador.style.height = ativo.offsetHeight + 'px';
+      indicador.style.width = '';
+    }
+    // só liga a transição depois do primeiro posicionamento, pra não "deslizar"
+    // de algum lugar aleatório na primeira renderização da página.
+    requestAnimationFrame(function(){ indicador.classList.add('pronto'); });
+  }
+
   function wireItem(id, fn){
     var btn = document.getElementById(id);
     if(!btn) return;
@@ -111,6 +134,7 @@
         if(syncBtn && opts.onAtualizar){
           syncBtn.onclick = opts.onAtualizar;
         }
+        moverIndicador_();
       });
     },
     setUser: function(nome, unidadeLabel){
@@ -134,6 +158,7 @@
       var links = document.querySelectorAll('#shared-sidebar-root .sidebar-nav a');
       if(links[0]) links[0].classList.toggle('active', activeKey === 'dashboard');
       if(links[1]) links[1].classList.toggle('active', activeKey === 'pedidos');
+      moverIndicador_();
     },
     onNavClick: function(fn){
       var links = document.querySelectorAll('#shared-sidebar-root .sidebar-nav a');
