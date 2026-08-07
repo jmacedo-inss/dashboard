@@ -3044,25 +3044,133 @@ Object.assign(window, {
   configurarFechamentoPorFora(el.modalHistoricoGeral);
 
   // -------- API --------
+  // -------- Ponte pedidos <-> Supabase (mantém a mesma "forma" das --------
+  // -------- respostas de antes, pra não precisar mexer em mais nada) ------
+  var CAMPO_PARA_COLUNA = {
+    'Data': 'data', 'Nome': 'nome', 'WhatsApp': 'whatsapp', 'Tipo de Produto': 'tipo_produto',
+    'Modelo/SKU': 'modelo_sku', 'Peças': 'pecas', 'Garantia': 'garantia', 'Pedido': 'pedido',
+    'Contato Cliente': 'contato_cliente', 'Reparo Feito': 'reparo_feito', 'Ordem de Serviço': 'ordem_servico',
+    'Status': 'status', 'Pagamento': 'pagamento', 'Valor Pago': 'valor_pago', 'Comprovante': 'comprovante',
+    'Criado Por': 'criado_por'
+  };
+  var COLUNA_PARA_CAMPO = {};
+  Object.keys(CAMPO_PARA_COLUNA).forEach(function (k) { COLUNA_PARA_CAMPO[CAMPO_PARA_COLUNA[k]] = k; });
+
+  function linhaParaPedido(row) {
+    var obj = { ID: row.id };
+    Object.keys(COLUNA_PARA_CAMPO).forEach(function (col) { obj[COLUNA_PARA_CAMPO[col]] = row[col]; });
+    return obj;
+  }
+  function camposParaColunas(dados) {
+    var row = {};
+    Object.keys(dados || {}).forEach(function (campo) {
+      var col = CAMPO_PARA_COLUNA[campo];
+      if (col) row[col] = dados[campo];
+    });
+    return row;
+  }
+  function linhaParaHistorico(h) {
+    return { Referencia: h.referencia, Usuario: h.usuario_nome, DataHora: h.data_hora, Descricao: h.descricao };
+  }
+  function registrarHistorico_(pedidoId, referencia, descricao) {
+    return SupabaseShared.client.from('historico').insert({
+      unidade_id: sessao.unidadeId, pedido_id: pedidoId, referencia: referencia,
+      usuario_nome: sessao.nome, descricao: descricao
+    });
+  }
+  function base64ParaBlob_(base64, tipo) {
+    var bin = atob(base64);
+    var bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new Blob([bytes], { type: tipo });
+  }
+  function subirComprovanteSeHouver_(dados) {
+    if (!dados.ComprovanteBase64) return Promise.resolve(dados);
+    var blob = base64ParaBlob_(dados.ComprovanteBase64, dados.ComprovanteTipo || 'application/octet-stream');
+    var caminho = sessao.unidadeId + '/' + Date.now() + '_' + (dados.ComprovanteNome || 'comprovante');
+    return SupabaseShared.client.storage.from('comprovantes').upload(caminho, blob, { contentType: dados.ComprovanteTipo }).then(function (res) {
+      if (res.error) return dados;
+      var pub = SupabaseShared.client.storage.from('comprovantes').getPublicUrl(caminho);
+      var novo = Object.assign({}, dados);
+      novo['Comprovante'] = pub.data.publicUrl;
+      delete novo.ComprovanteBase64; delete novo.ComprovanteNome; delete novo.ComprovanteTipo;
+      return novo;
+    });
+  }
+
   function apiGet(paramsExtra) {
-    if (!apiUrl) { if (sessao.nivel === 'admin') abrirModalConfig(); return Promise.resolve({ ok: false }); }
-    var params = 'token=' + encodeURIComponent(sessao.token) + '&unidadeId=' + encodeURIComponent(sessao.unidadeId) + (paramsExtra || '');
-    return fetch(apiUrl + '?' + params, { method: 'GET' })
-      .then(function (r) { return r.json(); })
-      .then(function (res) { tratarSessaoInvalida(res); return res; })
-      .catch(function (err) { toast('Erro ao conectar: ' + err.message, 'err'); return { ok: false }; });
+    if (paramsExtra && paramsExtra.indexOf('action=historico') !== -1) {
+      var m = paramsExtra.match(/id=([^&]+)/);
+      var pedidoId = m ? decodeURIComponent(m[1]) : '';
+      return SupabaseShared.client.from('historico').select('*').eq('pedido_id', pedidoId).order('data_hora', { ascending: false })
+        .then(function (res) {
+          if (res.error) return { ok: false };
+          return { ok: true, historico: (res.data || []).map(linhaParaHistorico) };
+        });
+    }
+    return SupabaseShared.client.from('pedidos').select('*').eq('unidade_id', sessao.unidadeId).order('data', { ascending: false })
+      .then(function (res) {
+        if (res.error) return { ok: false };
+        return { ok: true, orders: (res.data || []).map(linhaParaPedido) };
+      });
   }
 
   function apiPost(payload) {
-    if (!apiUrl) { if (sessao.nivel === 'admin') abrirModalConfig(); return Promise.resolve({ ok: false }); }
-    payload = Object.assign({ token: sessao.token, unidadeId: sessao.unidadeId }, payload);
-    return fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(payload)
-    }).then(function (r) { return r.json(); })
-      .then(function (res) { tratarSessaoInvalida(res); return res; })
-      .catch(function (err) { toast('Erro ao salvar: ' + err.message, 'err'); return { ok: false }; });
+    var acao = payload.action;
+    if (acao === 'historicoGeral') {
+      return SupabaseShared.client.from('historico').select('*').eq('unidade_id', sessao.unidadeId).order('data_hora', { ascending: false }).limit(500)
+        .then(function (res) {
+          if (res.error) return { ok: false, error: res.error.message };
+          return { ok: true, historico: (res.data || []).map(linhaParaHistorico) };
+        });
+    }
+    if (acao === 'create') {
+      return subirComprovanteSeHouver_(payload.data).then(function (dados) {
+        var row = camposParaColunas(dados);
+        row.unidade_id = sessao.unidadeId;
+        row.criado_por = sessao.nome;
+        if (!row.data) row.data = new Date().toISOString();
+        return SupabaseShared.client.from('pedidos').insert(row).select().single().then(function (res) {
+          if (res.error) return { ok: false, error: res.error.message };
+          return registrarHistorico_(res.data.id, dados['Nome'] || dados['Pedido'] || '', 'Pedido criado').then(function () {
+            return { ok: true, id: res.data.id };
+          });
+        });
+      });
+    }
+    if (acao === 'update') {
+      return subirComprovanteSeHouver_(payload.data).then(function (dados) {
+        var row = camposParaColunas(dados);
+        var campos = Object.keys(dados);
+        var descricao = campos.length === 1 ? (campos[0] + ' alterado para "' + dados[campos[0]] + '"') : 'Pedido atualizado';
+        return SupabaseShared.client.from('pedidos').update(row).eq('id', payload.id).then(function (res) {
+          if (res.error) return { ok: false, error: res.error.message };
+          return registrarHistorico_(payload.id, dados['Nome'] || dados['Pedido'] || '', descricao).then(function () {
+            return { ok: true };
+          });
+        });
+      });
+    }
+    if (acao === 'updateMany') {
+      var row = camposParaColunas(payload.data);
+      return SupabaseShared.client.from('pedidos').update(row).in('id', payload.ids).then(function (res) {
+        if (res.error) return { ok: false, error: res.error.message };
+        return { ok: true };
+      });
+    }
+    if (acao === 'delete') {
+      return SupabaseShared.client.from('pedidos').delete().eq('id', payload.id).then(function (res) {
+        if (res.error) return { ok: false, error: res.error.message };
+        return { ok: true };
+      });
+    }
+    if (acao === 'deleteMany') {
+      return SupabaseShared.client.from('pedidos').delete().in('id', payload.ids).then(function (res) {
+        if (res.error) return { ok: false, error: res.error.message };
+        return { ok: true };
+      });
+    }
+    return Promise.resolve({ ok: false, error: 'Ação desconhecida.' });
   }
 
   function tratarSessaoInvalida(res) {
