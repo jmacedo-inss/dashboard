@@ -1599,7 +1599,8 @@ async function carregarSessaoDoPerfil_(perfil){
       ID: u.id, Nome: u.nome, Cor: u.cor || '', CodigoASC: u.codigo_asc || '',
       MetaOrcamento: u.meta_orcamento || 0, MetaTas: u.meta_tas || 0, MetaTasConsultor: u.meta_tas_consultor || 0
     }));
-    const atual = session.unidades[0];
+    const lembrada = window.localStorage && localStorage.getItem('dashboard_unidade_selecionada');
+    const atual = session.unidades.find(u=>u.ID===lembrada) || session.unidades[0];
     session.unidadeId = atual ? atual.ID : '';
     session.unidadeNome = atual ? atual.Nome : '';
   } else {
@@ -1633,6 +1634,7 @@ async function trocarUnidade(id){
   session.unidadeId = id;
   const u = session.unidades.find(x=>x.ID===id);
   session.unidadeNome = u ? u.Nome : '';
+  try{ if(window.localStorage) localStorage.setItem('dashboard_unidade_selecionada', id); }catch(e){}
   await carregarDadosUnidadeAtual();
 }
 async function carregarDadosUnidadeAtual(){
@@ -1651,6 +1653,7 @@ async function mostrarApp(){
   await carregarDadosUnidadeAtual();
 }
 function sair(){
+  try{ if(window.localStorage) localStorage.removeItem('dashboard_unidade_selecionada'); }catch(e){}
   SupabaseShared.sair().then(function(){ window.location.href = '../'; });
 }
 function fecharModal(id){ document.getElementById(id).style.display = 'none'; }
