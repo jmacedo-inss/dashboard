@@ -626,12 +626,14 @@ function nivelLabel_(nivel){
   return 'Consultor L1';
 }
 async function atualizarMapaConsultores_(){
-  if(!config.sheetsUrl || !session.token || !session.unidadeId) return;
+  if(!session.unidadeId) return;
   try{
-    const res = await fetch(config.sheetsUrl+'?action=usuariosUnidade&token='+encodeURIComponent(session.token)+'&unidadeId='+encodeURIComponent(session.unidadeId));
-    const data = await res.json();
-    if(!data.ok) return;
-    usuariosTodosCache = (data.usuarios || []).map(u=>({Nome:u.Nome, Usuario:u.Usuario, Nivel:u.Nivel, IdConsultor:u.IdConsultor, UnidadeID: session.unidadeId}));
+    const { data, error } = await SupabaseShared.client
+      .from('usuarios')
+      .select('nome, usuario, nivel, id_consultor, unidade_id')
+      .eq('unidade_id', session.unidadeId);
+    if(error) return;
+    usuariosTodosCache = (data || []).map(u=>({Nome:u.nome, Usuario:u.usuario, Nivel:u.nivel, IdConsultor:u.id_consultor, UnidadeID:u.unidade_id}));
     const mapa = {};
     usuariosTodosCache.forEach(u=>{ if(u.IdConsultor) mapa[u.IdConsultor] = u.Nome; });
     consultorNomeMap = mapa;
@@ -649,7 +651,7 @@ function comZerosParaConsultores_(byUser){
 }
 function fmtBRL(v){ return (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
 function fmtDateBR(iso){ const [y,m,d] = iso.split('-'); return d+'/'+m+'/'+y; }
-function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function uid(){ return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c=>{ const r = Math.random()*16|0; return (c==='x'?r:(r&0x3|0x8)).toString(16); }); }
 function normalizeDateStr_(v){
   const s = String(v);
   const m = s.match(/^(\d{4}-\d{2}-\d{2})/);
@@ -709,34 +711,46 @@ async function testConnection(){
   }
 }
 async function syncToSheets(){
-  if(!config.sheetsUrl || !session.unidadeId || !session.token) return;
+  if(!session.unidadeId) return;
   setSyncing(true);
   try{
-    await fetch(config.sheetsUrl, {
-      method:'POST',
-      headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body: JSON.stringify({action:'salvarOrcTas', token: session.token, unidadeId: session.unidadeId, records})
-    });
-  }catch(e){ console.error('Falha ao sincronizar com Google Sheets', e); }
+    const orcRows = records.filter(r=>r.tipo==='orcamento').map(r=>({
+      id: r.id, unidade_id: session.unidadeId, data: r.data, valor: r.valor || 0, criado_por: session.nome
+    }));
+    const taRows = records.filter(r=>r.tipo==='ticket').map(r=>({
+      id: r.id, unidade_id: session.unidadeId, data: r.data, usuario: r.usuario || '', subtipo: r.subtipo || null,
+      valor: r.valor || 0, object_id: r.objectId || '', validado: r.validado || '', motivos: r.motivos || '',
+      cliente: r.cliente || '', modelo: r.modelo || '', criado_por: session.nome
+    }));
+    await SupabaseShared.client.from('orcamentos').delete().eq('unidade_id', session.unidadeId);
+    await SupabaseShared.client.from('tas').delete().eq('unidade_id', session.unidadeId);
+    if(orcRows.length) await SupabaseShared.client.from('orcamentos').insert(orcRows);
+    if(taRows.length) await SupabaseShared.client.from('tas').insert(taRows);
+  }catch(e){ console.error('Falha ao sincronizar com o Supabase', e); }
   finally{ setSyncing(false); }
 }
 async function fetchFromSheets(){
-  if(!config.sheetsUrl || !session.unidadeId || !session.token) return false;
+  if(!session.unidadeId) return false;
   setSyncing(true);
   try{
-    const res = await fetch(config.sheetsUrl+'?action=orcTas&token='+encodeURIComponent(session.token)+'&unidadeId='+encodeURIComponent(session.unidadeId));
-    if(!res.ok) throw new Error();
-    const data = await res.json();
-    if(!data.ok || !Array.isArray(data.records)) return false;
-    records = data.records.map(r=>({
-      id: String(r.id), data: normalizeDateStr_(r.data), tipo: r.tipo,
-      subtipo: r.subtipo || null, usuario: r.usuario, valor: parseFloat(r.valor)||0,
-      objectId: r.objectId || '', validado: r.validado || '', motivos: r.motivos || '',
+    const [orcRes, taRes] = await Promise.all([
+      SupabaseShared.client.from('orcamentos').select('*').eq('unidade_id', session.unidadeId),
+      SupabaseShared.client.from('tas').select('*').eq('unidade_id', session.unidadeId)
+    ]);
+    if(orcRes.error || taRes.error) return false;
+    const orcRecords = (orcRes.data || []).map(r=>({
+      id: String(r.id), data: normalizeDateStr_(r.data), tipo:'orcamento', subtipo: null, usuario: '',
+      valor: parseFloat(r.valor) || 0, objectId:'', validado:'', motivos:'', cliente:'', modelo:''
+    }));
+    const taRecords = (taRes.data || []).map(r=>({
+      id: String(r.id), data: normalizeDateStr_(r.data), tipo:'ticket', subtipo: r.subtipo || null, usuario: r.usuario,
+      valor: parseFloat(r.valor) || 0, objectId: r.object_id || '', validado: r.validado || '', motivos: r.motivos || '',
       cliente: r.cliente || '', modelo: r.modelo || ''
     }));
+    records = orcRecords.concat(taRecords);
     await saveData();
     return true;
-  }catch(e){ console.error('Falha ao carregar do Google Sheets', e); return false; }
+  }catch(e){ console.error('Falha ao carregar do Supabase', e); return false; }
   finally{ setSyncing(false); }
 }
 async function persistAndSync(){ await saveData(); await syncToSheets(); }
