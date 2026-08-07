@@ -1702,7 +1702,7 @@ function handleUpload(ev){
       document.getElementById('upload-preview').style.display = 'block';
       renderImportPreviewTable();
     }catch(err){
-      alert('Não consegui ler essa planilha. Confira se o arquivo é .xlsx, .xls ou .csv válido.');
+      console.error('Falha ao ler planilha:', err); alert('Não consegui ler essa planilha. Confira se o arquivo é .xlsx, .xls ou .csv válido.\n\nDetalhe técnico: ' + (err && err.message ? err.message : err));
     }
   };
   reader.readAsArrayBuffer(file);
@@ -1887,7 +1887,7 @@ function handleValidacaoUpload(ev){
       msgEl.textContent = 'Detectado: OBJECT_ID em "'+headers[objectIdIdx]+'", resultado em "'+headers[condicaoIdx]+'". '+dataRows.length+' linha(s) lidas. Motivos de recusa identificados: '+(motivosAchados.length>0?motivosAchados.join(', '):'nenhum')+'.';
       document.getElementById('validacao-preview').style.display = 'block';
     }catch(err){
-      alert('Não consegui ler essa planilha. Confira se o arquivo é .xlsx, .xls ou .csv válido.');
+      console.error('Falha ao ler planilha:', err); alert('Não consegui ler essa planilha. Confira se o arquivo é .xlsx, .xls ou .csv válido.\n\nDetalhe técnico: ' + (err && err.message ? err.message : err));
     }
   };
   reader.readAsArrayBuffer(file);
@@ -2531,7 +2531,7 @@ function handleFeeFile_(ev, tipo){
       const aoa = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
       if(tipo==='os') feeOsData = aoa; else feeGdtaData = aoa;
     }catch(err){
-      alert('Não consegui ler essa planilha. Confira se o arquivo é .xlsx, .xls ou .csv válido.');
+      console.error('Falha ao ler planilha:', err); alert('Não consegui ler essa planilha. Confira se o arquivo é .xlsx, .xls ou .csv válido.\n\nDetalhe técnico: ' + (err && err.message ? err.message : err));
     }
   };
   reader.readAsArrayBuffer(file);
