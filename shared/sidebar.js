@@ -111,6 +111,11 @@
     Array.prototype.forEach.call(menu.querySelectorAll('.sidebar-unidade-item'), function(item){
       item.onclick = function(){
         fecharDropdownUnidade_();
+        var label = document.getElementById('sb-unidade-label');
+        if(label) label.textContent = item.textContent;
+        Array.prototype.forEach.call(menu.querySelectorAll('.sidebar-unidade-item'), function(i){
+          i.classList.toggle('selecionado', i === item);
+        });
         if(onTrocarUnidadeCb_) onTrocarUnidadeCb_(item.dataset.id, item.textContent);
       };
     });
@@ -151,7 +156,15 @@
           unidadeBtn.onclick = function(e){
             e.stopPropagation();
             if(unidadeBtn.disabled) return;
-            unidadeDropdown.classList.toggle('open');
+            var abrindo = !unidadeDropdown.classList.contains('open');
+            if(abrindo){
+              var menuEl = document.getElementById('sb-unidade-menu');
+              var rect = unidadeBtn.getBoundingClientRect();
+              menuEl.style.left = rect.left + 'px';
+              menuEl.style.bottom = (window.innerHeight - rect.top + 6) + 'px';
+              menuEl.style.minWidth = rect.width + 'px';
+            }
+            unidadeDropdown.classList.toggle('open', abrindo);
           };
           unidadeDropdown.querySelector('.sidebar-unidade-menu').addEventListener('click', function(e){ e.stopPropagation(); });
           document.addEventListener('click', fecharDropdownUnidade_);
