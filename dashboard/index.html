@@ -3099,17 +3099,26 @@ Object.assign(window, {
     for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
     return new Blob([bytes], { type: tipo });
   }
+  var APPS_SCRIPT_URL_ = 'https://script.google.com/macros/s/AKfycby9ZBcnSaIIL9FqU0qHLCnBlhvIKVR4yYs3B-3suuSrUCa3s_uzwQRM1r3xzqjoJbjX/exec';
   function subirComprovanteSeHouver_(dados) {
     if (!dados.ComprovanteBase64) return Promise.resolve(dados);
-    var blob = base64ParaBlob_(dados.ComprovanteBase64, dados.ComprovanteTipo || 'application/octet-stream');
-    var caminho = sessao.unidadeId + '/' + Date.now() + '_' + (dados.ComprovanteNome || 'comprovante');
-    return SupabaseShared.client.storage.from('comprovantes').upload(caminho, blob, { contentType: dados.ComprovanteTipo }).then(function (res) {
-      if (res.error) return dados;
-      var pub = SupabaseShared.client.storage.from('comprovantes').getPublicUrl(caminho);
-      var novo = Object.assign({}, dados);
-      novo['Comprovante'] = pub.data.publicUrl;
-      delete novo.ComprovanteBase64; delete novo.ComprovanteNome; delete novo.ComprovanteTipo;
-      return novo;
+    return SupabaseShared.client.auth.getSession().then(function (sessaoRes) {
+      var accessToken = sessaoRes.data && sessaoRes.data.session ? sessaoRes.data.session.access_token : '';
+      return fetch(APPS_SCRIPT_URL_, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          action: 'uploadComprovanteDrive', accessToken: accessToken,
+          base64: dados.ComprovanteBase64, nome: dados.ComprovanteNome, tipo: dados.ComprovanteTipo,
+          unidadeNome: sessao.unidadeNome
+        })
+      }).then(function (r) { return r.json(); }).then(function (res) {
+        if (!res.ok) return dados;
+        var novo = Object.assign({}, dados);
+        novo['Comprovante'] = res.url;
+        delete novo.ComprovanteBase64; delete novo.ComprovanteNome; delete novo.ComprovanteTipo;
+        return novo;
+      });
     });
   }
 
